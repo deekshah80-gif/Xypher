@@ -1,0 +1,34 @@
+# Node.js .gitignore file
+
+# Dependencies
+node_modules/
+
+# dotenv environment variable files
+.env
+.env.local
+
+# Build outputs
+/dist
+/build
+
+# macOS System Files
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE-specific files
+tamp
+.idea/
+.vscode/
+
+# Ignore the local environment settings files
+local_settings.py
