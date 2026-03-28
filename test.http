@@ -1,0 +1,136 @@
+### --- STUDENTS ---
+
+### Add Alice Johnson
+POST http://localhost:5000/students
+Content-Type: application/json
+
+{
+  "name": "Alice Johnson",
+  "email": "alice@example.com",
+  "cgpa": 8.9,
+  "skills": ["JavaScript", "Node.js", "React"],
+  "role": "student"
+}
+
+### Add Bob Smith
+POST http://localhost:5000/students
+Content-Type: application/json
+
+{
+  "name": "Bob Smith",
+  "email": "bob@example.com",
+  "cgpa": 7.5,
+  "skills": ["Python", "Django", "SQL"],
+  "role": "student"
+}
+
+---
+
+### --- COMPANIES ---
+
+### Add TechCorp
+POST http://localhost:5000/companies
+Content-Type: application/json
+
+{
+  "name": "TechCorp",
+  "industry": "Software",
+  "email": "hr@techcorp.com",
+  "role": "company"
+}
+
+### Add DataSolutions
+POST http://localhost:5000/companies
+Content-Type: application/json
+
+{
+  "name": "DataSolutions",
+  "industry": "Data Analytics",
+  "email": "contact@datasolutions.com",
+  "role": "company"
+}
+
+---
+
+### --- JOBS ---
+
+### Add Frontend Developer Job
+POST http://localhost:5000/jobs
+Content-Type: application/json
+
+{
+  "companyId": "<TechCorp_id_here>",
+  "title": "Frontend Developer",
+  "description": "React + Node.js Developer",
+  "requiredSkills": ["JavaScript", "React", "Node.js"],
+  "minCgpa": 8.0
+}
+
+### Add Data Analyst Job
+POST http://localhost:5000/jobs
+Content-Type: application/json
+
+{
+  "companyId": "<DataSolutions_id_here>",
+  "title": "Data Analyst",
+  "description": "Python + SQL",
+  "requiredSkills": ["Python", "SQL", "Pandas"],
+  "minCgpa": 7.0
+}
+
+---
+
+### --- ALUMNI ---
+
+### Add Carol Lee
+POST http://localhost:5000/alumni
+Content-Type: application/json
+
+{
+  "name": "Carol Lee",
+  "email": "carol@example.com",
+  "graduationYear": 2020,
+  "currentCompany": "TechCorp",
+  "role": "alumni"
+}
+
+### Add David Kim
+POST http://localhost:5000/alumni
+Content-Type: application/json
+
+{
+  "name": "David Kim",
+  "email": "david@example.com",
+  "graduationYear": 2019,
+  "currentCompany": "DataSolutions",
+  "role": "alumni"
+}
+
+---
+
+### --- APPLICATIONS ---
+
+### Alice applies to Frontend Developer
+POST http://localhost:5000/applications
+Content-Type: application/json
+
+{
+  "studentId": "<Alice_id_here>",
+  "jobId": "<Frontend_Job_id_here>",
+  "status": "applied"
+}
+
+### Bob applies to Data Analyst
+POST http://localhost:5000/applications
+Content-Type: application/json
+
+{
+  "studentId": "<Bob_id_here>",
+  "jobId": "<Data_Analyst_Job_id_here>",
+  "status": "applied"
+}
+GET http://localhost:5000/students
+GET http://localhost:5000/companies
+GET http://localhost:5000/jobs
+GET http://localhost:5000/alumni
+GET http://localhost:5000/applications

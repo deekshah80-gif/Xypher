@@ -1,12 +1,16 @@
+<<<<<<< HEAD
 // routes/alumni.js  — M4: Alumni System
 // Replaces the basic alumni.js from the main branch.
 // Same pattern as students.js / companies.js — plain Express + Firebase Admin.
 
+=======
+>>>>>>> origin/M2
 const express = require('express');
 const router = express.Router();
 const admin = require('firebase-admin');
 const db = admin.firestore();
 
+<<<<<<< HEAD
 // ────────────────────────────────────────────
 //  POST /alumni  — Register / add alumni profile
 // ────────────────────────────────────────────
@@ -142,3 +146,17 @@ router.patch('/:id/mentorship', async (req, res) => {
 });
 
 module.exports = router;
+=======
+router.post('/', async (req, res) => {
+  const docRef = db.collection('alumni').doc();
+  await docRef.set(req.body);
+  res.json({ id: docRef.id });
+});
+
+router.get('/', async (req, res) => {
+  const snapshot = await db.collection('alumni').get();
+  res.json(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+});
+
+module.exports = router;
+>>>>>>> origin/M2

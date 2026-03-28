@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // index.js  — PlaceX / PlaceIQ Placement Portal Backend
 // Integrates all 4 team members' routes.
 // M4 additions are clearly marked with 🟦 M4.
@@ -64,12 +65,34 @@ app.get('/', (req, res) => {
 const studentsRoute = require('./routes/students');
 app.use('/students', studentsRoute);
 
+=======
+const express = require('express');
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
+console.log('Firebase initialized!');
+
+const app = express();
+app.use(express.json());
+
+// 🔹 Existing route
+const studentsRoute = require('./routes/students');
+app.use('/students', studentsRoute);
+
+// 🔹 ADD THESE LINES HERE 👇
+>>>>>>> origin/M2
 const companiesRoute = require('./routes/companies');
 app.use('/companies', companiesRoute);
 
 const jobsRoute = require('./routes/jobs');
 app.use('/jobs', jobsRoute);
 
+<<<<<<< HEAD
 const applicationsRoute = require('./routes/applications');
 app.use('/applications', applicationsRoute);
 
@@ -94,3 +117,20 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+=======
+const alumniRoute = require('./routes/alumni');
+app.use('/alumni', alumniRoute);
+
+const applicationsRoute = require('./routes/applications');
+app.use('/applications', applicationsRoute);
+
+// Root route
+app.get('/', (req, res) => {
+  res.send('Placement Backend Server Running!');
+});
+
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+>>>>>>> origin/M2
