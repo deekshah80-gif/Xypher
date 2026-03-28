@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PlaceX — Placement Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --card: #1a2236;
+    --border: #1f2d45;
+    --accent: #4f8ef7;
+    --accent2: #38d9a9;
+    --accent3: #f7934f;
+    --text: #e8edf5;
+    --muted: #6b7fa3;
+    --danger: #f76f6f;
+    --radius: 14px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── BG DECORATION ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(79,142,247,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 10% 80%, rgba(56,217,169,0.06) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ─── SECTIONS ─── */
+  .section { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .section.active { display: flex; flex-direction: column; }
+
+  /* ─── NAVBAR ─── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 32px;
+    background: rgba(17,24,39,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-brand {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem; font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .nav-right { display: flex; gap: 10px; align-items: center; }
+  .nav-user {
+    font-size: 0.8rem; color: var(--muted);
+    background: var(--card); border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 20px;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 500;
+    padding: 10px 22px; border-radius: 10px;
+    border: none; cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 4px 20px rgba(79,142,247,0.35);
+  }
+  .btn-primary:hover { background: #3a7ae8; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,142,247,0.45); }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-success { background: var(--accent2); color: #0b0f1a; }
+  .btn-success:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-sm { padding: 7px 16px; font-size: 0.82rem; border-radius: 8px; }
+  .btn-full { width: 100%; justify-content: center; padding: 13px; font-size: 1rem; }
+
+  /* ─── LOGIN PAGE ─── */
+  #loginPage { align-items: center; justify-content: center; padding: 20px; }
+  .login-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 100%; max-width: 420px;
+    box-shadow: var(--shadow);
+    animation: fadeUp 0.5s ease;
+  }
+  .login-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .login-tagline { color: var(--muted); font-size: 0.88rem; margin-bottom: 36px; }
+  .form-group { margin-bottom: 18px; }
+  label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select {
+    width: 100%; padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,0.12); }
+  select option { background: var(--surface); }
+  .login-err { color: var(--danger); font-size: 0.82rem; margin-top: 10px; display: none; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--muted); font-size: 0.78rem; }
+  .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* ─── PAGE CONTENT ─── */
+  .page-content { padding: 36px 32px; flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header { margin-bottom: 32px; }
+  .page-header h1 { font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 700; line-height: 1.2; }
+  .page-header p { color: var(--muted); margin-top: 6px; font-size: 0.9rem; }
+
+  /* ─── GRID ─── */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: rgba(79,142,247,0.4); transform: translateY(-2px); }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .card-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
+
+  /* ─── BADGE / CHIP ─── */
+  .chip {
+    display: inline-block; padding: 4px 11px;
+    border-radius: 20px; font-size: 0.75rem; font-weight: 500;
+    background: rgba(79,142,247,0.12); color: var(--accent);
+    border: 1px solid rgba(79,142,247,0.2); margin: 3px 3px 3px 0;
+  }
+  .chip.green { background: rgba(56,217,169,0.12); color: var(--accent2); border-color: rgba(56,217,169,0.2); }
+  .chip.orange { background: rgba(247,147,79,0.12); color: var(--accent3); border-color: rgba(247,147,79,0.2); }
+
+  /* ─── STUDENT DASHBOARD ─── */
+  .profile-banner {
+    background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(56,217,169,0.08));
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 30px;
+    display: flex; gap: 24px; align-items: center;
+    margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+  .profile-info h2 { font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 700; }
+  .profile-info p { color: var(--muted); font-size: 0.85rem; margin-top: 3px; }
+  .profile-info .role-badge {
+    display: inline-block; margin-top: 8px;
+    padding: 3px 12px; border-radius: 20px; font-size: 0.75rem;
+    background: rgba(79,142,247,0.15); color: var(--accent); border: 1px solid rgba(79,142,247,0.3);
+  }
+  .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+
+  .skill-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .skill-input-row input { flex: 1; }
+  #skillTags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .skill-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px 4px 12px; border-radius: 20px;
+    font-size: 0.78rem; background: rgba(56,217,169,0.12);
+    color: var(--accent2); border: 1px solid rgba(56,217,169,0.25); cursor: default;
+  }
+  .skill-tag span { cursor: pointer; opacity: 0.6; font-size: 0.9rem; }
+  .skill-tag span:hover { opacity: 1; }
+
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 28px; text-align: center; color: var(--muted);
+    transition: border-color 0.2s; cursor: pointer;
+  }
+  .upload-zone:hover { border-color: var(--accent); color: var(--accent); }
+  .upload-zone .icon { font-size: 2rem; margin-bottom: 8px; }
+  .upload-zone p { font-size: 0.85rem; }
+
+  /* ─── ALUMNI PAGE ─── */
+  .alumni-card { position: relative; overflow: hidden; }
+  .alumni-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .alumni-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: #fff;
+    margin-bottom: 14px;
+  }
+  .alumni-company { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.82rem; margin: 6px 0 4px; }
+  .alumni-role { font-size: 0.82rem; }
+  .connect-btn { margin-top: 16px; }
+  .batch-tag { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* ─── JOB LISTINGS ─── */
+  .search-bar {
+    display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .search-bar input { flex: 1; min-width: 200px; }
+  .job-card { position: relative; }
+  .job-card-top { display: flex; gap: 14px; align-items: flex-start; }
+  .company-logo {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+    flex-shrink: 0; color: #fff;
+  }
+  .job-meta { flex: 1; }
+  .job-meta h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+  .job-meta .co { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .job-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 10px; }
+  .job-type { font-size: 0.78rem; color: var(--accent3); background: rgba(247,147,79,0.1); border: 1px solid rgba(247,147,79,0.2); padding: 3px 10px; border-radius: 20px; }
+  .no-results { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 0.9rem; }
+
+  /* ─── ADMIN PAGE ─── */
+  .stat-row { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .stat-card {
+    flex: 1; min-width: 160px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+  }
+  .stat-card .num { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; }
+  .stat-card .lbl { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+  .stat-card.blue .num { color: var(--accent); }
+  .stat-card.green .num { color: var(--accent2); }
+  .stat-card.orange .num { color: var(--accent3); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  thead th { text-align: left; padding: 10px 14px; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  tbody td { padding: 13px 14px; border-bottom: 1px solid rgba(31,45,69,0.6); }
+  tbody tr:hover { background: rgba(79,142,247,0.04); }
+  .status { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+  .status.placed { background: rgba(56,217,169,0.12); color: var(--accent2); }
+  .status.searching { background: rgba(79,142,247,0.12); color: var(--accent); }
+  .status.pending { background: rgba(247,147,79,0.12); color: var(--accent3); }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--accent2); color: #0b0f1a;
+    padding: 12px 22px; border-radius: 10px;
+    font-size: 0.88rem; font-weight: 500;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 9999; pointer-events: none;
+    box-shadow: 0 8px 24px rgba(56,217,169,0.35);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeUp 0.4s ease both; }
+
+  /* ─── SECTION TITLE ─── */
+  .section-label {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent); font-weight: 600; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    .page-content { padding: 20px 16px; }
+    nav { padding: 14px 16px; }
+    .login-card { padding: 32px 24px; }
+    .profile-banner { padding: 20px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .stat-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ LOGIN PAGE ═══════════════════ -->
+<div id="loginPage" class="section active">
+  <div style="display:flex;align-items:center;justify-content:center;flex:1;padding:20px;min-height:100vh;">
+    <div class="login-card">
+      <div class="login-logo">PlaceX</div>
+      <p class="login-tagline">Your gateway to career opportunities 🚀</p>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="e.g. student01" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" />
+      </div>
+      <div class="form-group">
+        <label>Login As</label>
+        <select id="loginRole">
+          <option value="">— Select Role —</option>
+          <option value="student">🎓 Student</option>
+          <option value="alumni">🏆 Alumni</option>
+          <option value="admin">🛡️ Admin / T&P</option>
+        </select>
+      </div>
+      <p class="login-err" id="loginErr">⚠ Please fill all fields.</p>
+      <div class="divider">or continue with demo</div>
+      <button class="btn btn-primary btn-full" onclick="login()">Login to Portal</button>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="quickLogin('student')">Student Demo</button>
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="quickLogin('alumni')">Alumni Demo</button>
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="quickLogin('admin')">Admin Demo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ STUDENT DASHBOARD ═══════════════════ -->
+<div id="studentPage" class="section">
+  <nav>
+    <span class="nav-brand">PlaceX</span>
+    <div class="nav-right">
+      <span class="nav-user" id="studentNavName">Student</span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="page-content fade-in">
+    <!-- Profile Banner -->
+    <div class="profile-banner">
+      <div class="avatar" id="studentAvatar">A</div>
+      <div class="profile-info">
+        <h2 id="studentNameDisplay">Arjun Mehta</h2>
+        <p>B.Tech Computer Science · 2025 Batch</p>
+        <span class="role-badge">🎓 Student</span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="show('jobsPage')">Browse Jobs →</button>
+        <button class="btn btn-ghost btn-sm" onclick="show('alumniPage')">Meet Alumni</button>
+      </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div class="section-label">My Skills</div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="skill-input-row">
+        <input type="text" id="skillInput" placeholder="Type a skill and press Add..." onkeydown="if(event.key==='Enter') addSkill()" />
+        <button class="btn btn-success btn-sm" onclick="addSkill()">+ Add</button>
+      </div>
+      <div id="skillTags">
+        <div class="skill-tag">JavaScript <span onclick="removeSkill(this)">✕</span></div>
+        <div class="skill-tag">React <span onclick="removeSkill(this)">✕</span></div>
+        <div class="skill-tag">Python <span onclick="removeSkill(this)">✕</span></div>
+        <div class="skill-tag">SQL <span onclick="removeSkill(this)">✕</span></div>
+      </div>
+    </div>
+
+    <!-- Resume Upload -->
+    <div class="section-label">Resume</div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="upload-zone" onclick="fakeUpload()" id="uploadZone">
+        <div class="icon">📄</div>
+        <p id="uploadText">Click to upload your resume (PDF, DOC)</p>
+        <p style="font-size:0.75rem;margin-top:6px;">Max 5MB</p>
+      </div>
+      <input type="file" id="resumeFile" style="display:none" accept=".pdf,.doc,.docx" onchange="handleFile()" />
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-label">Explore</div>
+    <div class="grid-2">
+      <div class="card" style="cursor:pointer;text-align:center;" onclick="show('jobsPage')">
+        <div style="font-size:2rem;margin-bottom:10px;">💼</div>
+        <div class="card-title">Job Listings</div>
+        <div class="card-sub">Browse and apply to openings</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;">View Jobs →</button>
+      </div>
+      <div class="card" style="cursor:pointer;text-align:center;" onclick="show('alumniPage')">
+        <div style="font-size:2rem;margin-bottom:10px;">🤝</div>
+        <div class="card-title">Alumni Network</div>
+        <div class="card-sub">Connect with seniors in industry</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;">Meet Alumni →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ALUMNI PAGE ═══════════════════ -->
+<div id="alumniPage" class="section">
+  <nav>
+    <span class="nav-brand">PlaceX</span>
+    <div class="nav-right">
+      <span class="nav-user">Alumni Network</span>
+      <button class="btn btn-outline btn-sm" onclick="goBack()">← Back</button>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="page-content fade-in">
+    <div class="page-header">
+      <h1>Alumni Network 🤝</h1>
+      <p>Connect with seniors who've been where you are</p>
+    </div>
+    <div class="grid-3">
+
+      <div class="card alumni-card">
+        <div class="alumni-avatar" style="background:linear-gradient(135deg,#4f8ef7,#38d9a9);">PS</div>
+        <div class="card-title">Priya Sharma</div>
+        <div class="batch-tag">Class of 2022 · CSE</div>
+        <div class="alumni-company">🏢 Google</div>
+        <div class="alumni-role"><span class="chip">Software Engineer II</span></div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Focus on DSA early. Internships are gold."</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
+          <span class="chip">Java</span><span class="chip">System Design</span><span class="chip">Kotlin</span>
+        </div>
+        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Priya!')">Connect</button>
+      </div>
+
+      <div class="card alumni-card">
+        <div class="alumni-avatar" style="background:linear-gradient(135deg,#f7934f,#f76f6f);">RK</div>
+        <div class="card-title">Rohan Kulkarni</div>
+        <div class="batch-tag">Class of 2021 · IT</div>
+        <div class="alumni-company">🏢 Microsoft</div>
+        <div class="alumni-role"><span class="chip green">Senior SDE</span></div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Open source contributions open doors."</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
+          <span class="chip">C#</span><span class="chip">.NET</span><span class="chip">Azure</span>
+        </div>
+        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Rohan!')">Connect</button>
+      </div>
+
+      <div class="card alumni-card">
+        <div class="alumni-avatar" style="background:linear-gradient(135deg,#a78bf7,#4f8ef7);">AN</div>
+        <div class="card-title">Ananya Nair</div>
+        <div class="batch-tag">Class of 2023 · CSE</div>
+        <div class="alumni-company">🏢 Amazon</div>
+        <div class="alumni-role"><span class="chip orange">SDE-I</span></div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"STAR format for interviews — it works."</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
+          <span class="chip">Python</span><span class="chip">AWS</span><span class="chip">Django</span>
+        </div>
+        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Ananya!')">Connect</button>
+      </div>
+
+      <div class="card alumni-card">
+        <div class="alumni-avatar" style="background:linear-gradient(135deg,#38d9a9,#4f8ef7);">VR</div>
+        <div class="card-title">Vikram Rao</div>
+        <div class="batch-tag">Class of 2020 · ECE</div>
+        <div class="alumni-company">🏢 Infosys</div>
+        <div class="alumni-role"><span class="chip green">Tech Lead</span></div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Soft skills are underrated. Communicate clearly."</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
+          <span class="chip">Java</span><span class="chip">Spring Boot</span><span class="chip">MySQL</span>
+        </div>
+        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Vikram!')">Connect</button>
+      </div>
+
+      <div class="card alumni-card">
+        <div class="alumni-avatar" style="background:linear-gradient(135deg,#f76f6f,#f7934f);">SM</div>
+        <div class="card-title">Sneha Mishra</div>
+        <div class="batch-tag">Class of 2022 · MCA</div>
+        <div class="alumni-company">🏢 Flipkart</div>
+        <div class="alumni-role"><span class="chip">Data Analyst</span></div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Build a portfolio. Projects speak louder."</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
+          <span class="chip">Python</span><span class="chip">Tableau</span><span class="chip">SQL</span>
+        </div>
+        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Sneha!')">Connect</button>
+      </div>
+
+      <div class="card alumni-card">
+        <div class="alumni-avatar" style="background:linear-gradient(135deg,#4f8ef7,#a78bf7);">KP</div>
+        <div class="card-title">Karan Patel</div>
+        <div class="batch-tag">Class of 2021 · CSE</div>
+        <div class="alumni-company">🏢 Razorpay</div>
+        <div class="alumni-role"><span class="chip orange">Backend Engineer</span></div>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Startups move fast — great for learning."</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
+          <span class="chip">Node.js</span><span class="chip">Go</span><span class="chip">Redis</span>
+        </div>
+        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Karan!')">Connect</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ JOBS PAGE ═══════════════════ -->
+<div id="jobsPage" class="section">
+  <nav>
+    <span class="nav-brand">PlaceX</span>
+    <div class="nav-right">
+      <span class="nav-user">Job Listings</span>
+      <button class="btn btn-outline btn-sm" onclick="goBack()">← Back</button>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="page-content fade-in">
+    <div class="page-header">
+      <h1>Job Listings 💼</h1>
+      <p>Explore and apply to campus recruitment opportunities</p>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="jobSearch" placeholder="🔍 Filter by skill, company or title..." oninput="filterJobs()" />
+      <select id="jobFilter" onchange="filterJobs()" style="max-width:180px;">
+        <option value="">All Types</option>
+        <option value="full-time">Full-Time</option>
+        <option value="internship">Internship</option>
+        <option value="contract">Contract</option>
+      </select>
+    </div>
+
+    <div id="jobList" class="grid-2"></div>
+    <div id="noResults" class="no-results" style="display:none;">🔭 No jobs match your filter. Try different keywords.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ADMIN PAGE ═══════════════════ -->
+<div id="adminPage" class="section">
+  <nav>
+    <span class="nav-brand">PlaceX</span>
+    <div class="nav-right">
+      <span class="nav-user">Admin / T&P</span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="page-content fade-in">
+    <div class="page-header">
+      <h1>T&P Dashboard 🛡️</h1>
+      <p>Placement statistics and student management</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card blue"><div class="num">248</div><div class="lbl">Registered Students</div></div>
+      <div class="stat-card green"><div class="num">134</div><div class="lbl">Students Placed</div></div>
+      <div class="stat-card orange"><div class="num">42</div><div class="lbl">Active Job Listings</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--text)">18</div><div class="lbl">Companies Visiting</div></div>
+    </div>
+
+    <div class="section-label">Recent Placements</div>
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th>Student</th><th>Branch</th><th>Company</th><th>Package</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Aarav Singh</td><td>CSE</td><td>Wipro</td><td>7.5 LPA</td><td><span class="status placed">Placed</span></td></tr>
+          <tr><td>Divya Rao</td><td>IT</td><td>TCS</td><td>6.0 LPA</td><td><span class="status placed">Placed</span></td></tr>
+          <tr><td>Mehul Joshi</td><td>ECE</td><td>—</td><td>—</td><td><span class="status searching">Searching</span></td></tr>
+          <tr><td>Pooja Verma</td><td>MCA</td><td>Cognizant</td><td>5.5 LPA</td><td><span class="status placed">Placed</span></td></tr>
+          <tr><td>Siddharth K</td><td>CSE</td><td>—</td><td>—</td><td><span class="status pending">Pending</span></td></tr>
+          <tr><td>Tanvi Desai</td><td>IT</td><td>Infosys</td><td>6.5 LPA</td><td><span class="status placed">Placed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="showToast('Placement report exported!')">Export Report</button>
+      <button class="btn btn-outline" onclick="show('jobsPage')">Manage Job Listings</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ALUMNI DASHBOARD ═══════════════════ -->
+<div id="alumniDashPage" class="section">
+  <nav>
+    <span class="nav-brand">PlaceX</span>
+    <div class="nav-right">
+      <span class="nav-user" id="alumniNavName">Alumni</span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="page-content fade-in">
+    <div class="page-header">
+      <h1>Welcome back! 🏆</h1>
+      <p>Help the next generation find their path</p>
+    </div>
+    <div class="profile-banner">
+      <div class="avatar" style="background:linear-gradient(135deg,#f7934f,#f76f6f)">A</div>
+      <div class="profile-info">
+        <h2 id="alumniNameDisplay">Alumni User</h2>
+        <p>Senior Software Engineer · Class of 2021</p>
+        <span class="role-badge" style="background:rgba(247,147,79,0.15);color:var(--accent3);border-color:rgba(247,147,79,0.3);">🏆 Alumni</span>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2rem;margin-bottom:10px;">📣</div>
+        <div class="card-title">Share Experience</div>
+        <div class="card-sub">Post interview tips or career advice</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="showToast('Post feature coming soon!')">Write a Post</button>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2rem;margin-bottom:10px;">🎓</div>
+        <div class="card-title">Mentor Juniors</div>
+        <div class="card-sub">Accept 1:1 mentorship requests</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="showToast('3 new mentorship requests!')">View Requests</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TOAST ═══════════════════ -->
+<div id="toast">✓ Applied Successfully!</div>
+
+<script>
+  // ─── DATA ───
+  const jobs = [
+    { id:1, title:'Frontend Developer', company:'Swiggy', logo:'SW', color:'#f7934f', type:'full-time', skills:['React','JavaScript','CSS'], ctc:'12 LPA', loc:'Bengaluru' },
+    { id:2, title:'Data Analyst', company:'Razorpay', logo:'RZ', color:'#4f8ef7', type:'full-time', skills:['Python','SQL','Tableau'], ctc:'10 LPA', loc:'Bengaluru' },
+    { id:3, title:'Backend Engineer', company:'Zepto', logo:'ZP', color:'#38d9a9', type:'full-time', skills:['Node.js','MongoDB','Docker'], ctc:'14 LPA', loc:'Mumbai' },
+    { id:4, title:'ML Engineer Intern', company:'Flipkart', logo:'FK', color:'#a78bf7', type:'internship', skills:['Python','TensorFlow','NLP'], ctc:'₹60K/mo', loc:'Bengaluru' },
+    { id:5, title:'Cloud DevOps', company:'Accenture', logo:'AC', color:'#f76f6f', type:'full-time', skills:['AWS','Kubernetes','Linux'], ctc:'11 LPA', loc:'Pune' },
+    { id:6, title:'UI/UX Designer', company:'Urban Company', logo:'UC', color:'#38d9a9', type:'internship', skills:['Figma','CSS','Prototyping'], ctc:'₹40K/mo', loc:'Remote' },
+    { id:7, title:'Java Developer', company:'Infosys', logo:'IN', color:'#4f8ef7', type:'full-time', skills:['Java','Spring Boot','MySQL'], ctc:'8 LPA', loc:'Chennai' },
+    { id:8, title:'Product Manager', company:'Meesho', logo:'ME', color:'#f7934f', type:'contract', skills:['Agile','Analytics','Communication'], ctc:'18 LPA', loc:'Bengaluru' },
+  ];
+
+  let currentSection = 'loginPage';
+  let prevSection = 'studentPage';
+  let currentRole = 'student';
+  let appliedJobs = new Set();
+
+  // ─── NAV ───
+  function show(id) {
+    prevSection = currentSection;
+    document.getElementById(currentSection).classList.remove('active');
+    document.getElementById(id).classList.add('active');
+    currentSection = id;
+    if (id === 'jobsPage') renderJobs();
+    window.scrollTo(0,0);
+  }
+
+  function goBack() { show(prevSection); }
+
+  function logout() {
+    document.getElementById(currentSection).classList.remove('active');
+    document.getElementById('loginPage').classList.add('active');
+    currentSection = 'loginPage';
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+    document.getElementById('loginRole').value='';
+    document.getElementById('loginErr').style.display='none';
+    appliedJobs.clear();
+    window.scrollTo(0,0);
+  }
+
+  // ─── LOGIN ───
+  function login() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value.trim();
+    const r = document.getElementById('loginRole').value;
+    if (!u || !p || !r) {
+      document.getElementById('loginErr').style.display='block';
+      return;
+    }
+    document.getElementById('loginErr').style.display='none';
+    doLogin(u, r);
+  }
+
+  function quickLogin(role) {
+    const names = {student:'student01', alumni:'alumni01', admin:'admin01'};
+    document.getElementById('loginUser').value = names[role];
+    document.getElementById('loginPass').value = 'demo123';
+    document.getElementById('loginRole').value = role;
+    doLogin(names[role], role);
+  }
+
+  function doLogin(username, role) {
+    currentRole = role;
+    const display = username.charAt(0).toUpperCase() + username.slice(1).replace(/\d+/,'');
+    if (role === 'student') {
+      document.getElementById('studentNameDisplay').textContent = display || 'Student User';
+      document.getElementById('studentAvatar').textContent = (display[0]||'S');
+      document.getElementById('studentNavName').textContent = display;
+      prevSection = 'studentPage';
+      show('studentPage');
+    } else if (role === 'alumni') {
+      document.getElementById('alumniNameDisplay').textContent = display || 'Alumni User';
+      document.getElementById('alumniNavName').textContent = display;
+      prevSection = 'alumniDashPage';
+      show('alumniDashPage');
+    } else {
+      prevSection = 'adminPage';
+      show('adminPage');
+    }
+  }
+
+  // ─── SKILLS ───
+  function addSkill() {
+    const inp = document.getElementById('skillInput');
+    const val = inp.value.trim();
+    if (!val) return;
+    const tag = document.createElement('div');
+    tag.className = 'skill-tag';
+    tag.innerHTML = `${val} <span onclick="removeSkill(this)">✕</span>`;
+    document.getElementById('skillTags').appendChild(tag);
+    inp.value = '';
+    inp.focus();
+  }
+
+  function removeSkill(el) { el.parentElement.remove(); }
+
+  // ─── RESUME UPLOAD ───
+  function fakeUpload() { document.getElementById('resumeFile').click(); }
+  function handleFile() {
+    const f = document.getElementById('resumeFile').files[0];
+    if (f) {
+      document.getElementById('uploadText').textContent = '✅ ' + f.name + ' uploaded';
+      document.getElementById('uploadZone').style.borderColor = 'var(--accent2)';
+      document.getElementById('uploadZone').style.color = 'var(--accent2)';
+      showToast('Resume uploaded successfully!');
+    }
+  }
+
+  // ─── JOBS ───
+  function renderJobs(filter='', typeFilter='') {
+    const list = document.getElementById('jobList');
+    const noRes = document.getElementById('noResults');
+    const q = filter.toLowerCase();
+    const filtered = jobs.filter(j => {
+      const matchQ = !q || j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) || j.skills.some(s=>s.toLowerCase().includes(q));
+      const matchT = !typeFilter || j.type === typeFilter;
+      return matchQ && matchT;
+    });
+    if (filtered.length === 0) {
+      list.innerHTML=''; noRes.style.display='block'; return;
+    }
+    noRes.style.display='none';
+    list.innerHTML = filtered.map(j => `
+      <div class="card job-card fade-in">
+        <div class="job-card-top">
+          <div class="company-logo" style="background:${j.color}20;color:${j.color};border:1px solid ${j.color}40;">${j.logo}</div>
+          <div class="job-meta">
+            <h3>${j.title}</h3>
+            <div class="co">🏢 ${j.company} · 📍 ${j.loc}</div>
+          </div>
+          <span class="job-type">${j.type}</span>
+        </div>
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:4px;">
+          ${j.skills.map(s=>`<span class="chip">${s}</span>`).join('')}
+        </div>
+        <div class="job-footer">
+          <span style="font-size:0.88rem;color:var(--accent2);font-weight:500;">💰 ${j.ctc}</span>
+          <button id="applyBtn${j.id}" class="btn btn-${appliedJobs.has(j.id)?'ghost':'primary'} btn-sm" onclick="applyJob(${j.id})">
+            ${appliedJobs.has(j.id)?'✓ Applied':'Apply Now'}
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterJobs() {
+    const q = document.getElementById('jobSearch').value;
+    const t = document.getElementById('jobFilter').value;
+    renderJobs(q, t);
+  }
+
+  function applyJob(id) {
+    if (appliedJobs.has(id)) return;
+    appliedJobs.add(id);
+    const btn = document.getElementById('applyBtn'+id);
+    if (btn) { btn.textContent = '✓ Applied'; btn.className = 'btn btn-ghost btn-sm'; }
+    showToast('Applied Successfully! 🎉');
+  }
+
+  // ─── TOAST ───
+  let toastTimer;
+  function showToast(msg='Applied Successfully!') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ─── INIT ───
+  renderJobs();
+</script>
+</body>
+</html>
