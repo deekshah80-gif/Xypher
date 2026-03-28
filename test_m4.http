@@ -1,0 +1,219 @@
+### ══════════════════════════════════════════
+###  M4 API TESTS  — Use with VS Code REST Client
+###  or paste URLs into Postman / Insomnia
+### ══════════════════════════════════════════
+
+
+### ─────────────────────────────────────────
+###  ALUMNI  —  /alumni
+### ─────────────────────────────────────────
+
+### 1. Add Carol Lee (mentorship OPEN)
+POST http://localhost:5000/alumni
+Content-Type: application/json
+
+{
+  "name": "Carol Lee",
+  "email": "carol@example.com",
+  "graduationYear": 2022,
+  "currentCompany": "Google",
+  "jobTitle": "Software Engineer II",
+  "lpa": 45,
+  "cgpa": 9.2,
+  "branch": "CSE",
+  "skills": ["Java", "System Design", "Kotlin"],
+  "linkedin": "https://linkedin.com/in/carollee",
+  "github": "https://github.com/carollee",
+  "bio": "Focus on DSA early. Internships are gold.",
+  "mentorshipOpen": true
+}
+
+###
+
+### 2. Add David Kim (mentorship CLOSED)
+POST http://localhost:5000/alumni
+Content-Type: application/json
+
+{
+  "name": "David Kim",
+  "email": "david@example.com",
+  "graduationYear": 2021,
+  "currentCompany": "Microsoft",
+  "jobTitle": "Senior SDE",
+  "lpa": 52,
+  "cgpa": 8.9,
+  "branch": "IT",
+  "skills": ["C#", ".NET", "Azure"],
+  "linkedin": "https://linkedin.com/in/davidkim",
+  "bio": "Open source contributions open doors.",
+  "mentorshipOpen": false
+}
+
+###
+
+### 3. Get all alumni
+GET http://localhost:5000/alumni
+
+###
+
+### 4. Get single alumni (replace ID)
+GET http://localhost:5000/alumni/<ALUMNI_ID_HERE>
+
+###
+
+### 5. Update alumni — change job title
+PUT http://localhost:5000/alumni/<ALUMNI_ID_HERE>
+Content-Type: application/json
+
+{
+  "jobTitle": "Staff Engineer",
+  "lpa": 60,
+  "mentorshipOpen": true
+}
+
+###
+
+### 6. Toggle mentorship ON/OFF
+PATCH http://localhost:5000/alumni/<ALUMNI_ID_HERE>/mentorship
+
+###
+
+### 7. Delete alumni (admin use)
+DELETE http://localhost:5000/alumni/<ALUMNI_ID_HERE>
+
+###
+
+
+### ─────────────────────────────────────────
+###  MENTORSHIP  —  /mentorship
+### ─────────────────────────────────────────
+
+### 8. Student sends mentorship request
+###    (replace studentId and alumniId with real Firestore IDs)
+POST http://localhost:5000/mentorship
+Content-Type: application/json
+
+{
+  "studentId": "<STUDENT_ID_HERE>",
+  "studentName": "Alice Johnson",
+  "alumniId": "<ALUMNI_ID_HERE>",
+  "topic": "Cracking Google interviews",
+  "message": "Hi Carol, I am a 3rd year CSE student preparing for product companies. I keep getting stuck at system design rounds. Would love your guidance on how you prepared and any resources you found helpful."
+}
+
+###
+
+### 9. Get all mentorship requests (admin view)
+GET http://localhost:5000/mentorship
+
+###
+
+### 10. Get requests FOR a specific alumni
+GET http://localhost:5000/mentorship/alumni/<ALUMNI_ID_HERE>
+
+###
+
+### 11. Get requests BY a specific student
+GET http://localhost:5000/mentorship/student/<STUDENT_ID_HERE>
+
+###
+
+### 12. Alumni ACCEPTS a request
+PATCH http://localhost:5000/mentorship/<REQUEST_ID_HERE>/status
+Content-Type: application/json
+
+{
+  "status": "accepted",
+  "scheduledAt": "2025-08-10T10:00:00.000Z",
+  "notes": "Let us schedule a 30-min call via Google Meet."
+}
+
+###
+
+### 13. Alumni DECLINES a request
+PATCH http://localhost:5000/mentorship/<REQUEST_ID_HERE>/status
+Content-Type: application/json
+
+{
+  "status": "declined",
+  "notes": "Currently too busy but try again next month."
+}
+
+###
+
+### 14. Alumni marks session COMPLETED
+PATCH http://localhost:5000/mentorship/<REQUEST_ID_HERE>/status
+Content-Type: application/json
+
+{
+  "status": "completed",
+  "notes": "Had a great 45-min session. Covered system design basics."
+}
+
+###
+
+### 15. Delete a request (admin use)
+DELETE http://localhost:5000/mentorship/<REQUEST_ID_HERE>
+
+###
+
+
+### ─────────────────────────────────────────
+###  EXTERNAL JOBS  —  /external
+### ─────────────────────────────────────────
+
+### 16. Get all external jobs (seed data)
+GET http://localhost:5000/external/jobs
+
+###
+
+### 17. Search for Python jobs
+GET http://localhost:5000/external/jobs?q=python
+
+###
+
+### 18. Filter internships only
+GET http://localhost:5000/external/jobs?type=internship
+
+###
+
+### 19. Filter LinkedIn full-time jobs
+GET http://localhost:5000/external/jobs?source=linkedin&type=full-time
+
+###
+
+### 20. Search + filter combined
+GET http://localhost:5000/external/jobs?q=react&type=internship&source=internshala
+
+###
+
+
+### ─────────────────────────────────────────
+###  INTEGRATION CHECK  — existing M1/M2/M3 routes
+###  (make sure M4 did not break anything)
+### ─────────────────────────────────────────
+
+### 21. Students still work
+GET http://localhost:5000/students
+
+###
+
+### 22. Companies still work
+GET http://localhost:5000/companies
+
+###
+
+### 23. Jobs still work
+GET http://localhost:5000/jobs
+
+###
+
+### 24. Applications still work
+GET http://localhost:5000/applications
+
+###
+
+### 25. Health check / route list
+GET http://localhost:5000/
+
+###
