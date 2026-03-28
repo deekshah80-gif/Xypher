@@ -1,806 +1,1268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>PlaceX — Placement Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlaceIQ — AI Career Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:    #0c0d11;
+  --ink2:   #11121a;
+  --ink3:   #181921;
+  --ink4:   #21222e;
+  --line:   #2a2b3a;
+  --line2:  #363748;
+  --amber:  #f5a623;
+  --amber-d:rgba(245,166,35,.12);
+  --amber-g:rgba(245,166,35,.22);
+  --teal:   #2dd4bf;
+  --teal-d: rgba(45,212,191,.1);
+  --rose:   #fb7185;
+  --rose-d: rgba(251,113,133,.1);
+  --violet: #a78bfa;
+  --violet-d:rgba(167,139,250,.1);
+  --sky:    #38bdf8;
+  --sand:   #e6ddd4;
+  --sand2:  #a49b92;
+  --sand3:  #65615d;
+  --r:12px; --rl:18px;
+  --ff:'Outfit',sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--ff);background:var(--ink);color:var(--sand);min-height:100vh;overflow-x:hidden}
 
-  :root {
-    --bg: #0b0f1a;
-    --surface: #111827;
-    --card: #1a2236;
-    --border: #1f2d45;
-    --accent: #4f8ef7;
-    --accent2: #38d9a9;
-    --accent3: #f7934f;
-    --text: #e8edf5;
-    --muted: #6b7fa3;
-    --danger: #f76f6f;
-    --radius: 14px;
-    --shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-columns:256px 1fr;min-height:100vh}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+/* ── SIDEBAR ── */
+.sb{background:var(--ink2);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-head{padding:24px 20px 18px;border-bottom:1px solid var(--line)}
+.logo{font-size:21px;font-weight:800;letter-spacing:-.5px}
+.logo em{font-style:normal;color:var(--amber)}
+.logo-sub{font-size:10px;color:var(--sand3);text-transform:uppercase;letter-spacing:.6px;margin-top:3px}
 
-  /* ─── BG DECORATION ─── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(79,142,247,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 10% 80%, rgba(56,217,169,0.06) 0%, transparent 60%);
-    pointer-events: none; z-index: 0;
-  }
+/* Student card */
+.stu-card{margin:14px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stu-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rose));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin-bottom:8px}
+.stu-name{font-size:13px;font-weight:600}
+.stu-meta{font-size:11px;color:var(--sand3);margin-top:1px}
+.cgpa-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.cgpa-lbl{font-size:10px;color:var(--sand3);font-family:var(--fm)}
+.cgpa-bar{flex:1;height:4px;background:var(--ink4);border-radius:2px;overflow:hidden}
+.cgpa-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--teal))}
+.cgpa-val{font-size:11px;font-weight:600;color:var(--amber);font-family:var(--fm)}
 
-  /* ─── SECTIONS ─── */
-  .section { display: none; min-height: 100vh; position: relative; z-index: 1; }
-  .section.active { display: flex; flex-direction: column; }
+/* Social links in card */
+.social-row{display:flex;gap:6px;margin-top:10px}
+.social-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1px solid var(--line2);background:var(--ink4);font-size:10px;color:var(--sand2);cursor:pointer;transition:all .15s;text-decoration:none}
+.social-btn:hover{border-color:var(--amber);color:var(--amber)}
+.social-btn.linked{border-color:var(--teal);color:var(--teal);background:var(--teal-d)}
+.social-icon{font-size:12px}
 
-  /* ─── NAVBAR ─── */
-  nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 32px;
-    background: rgba(17,24,39,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 100;
-  }
-  .nav-brand {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.4rem; font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .nav-right { display: flex; gap: 10px; align-items: center; }
-  .nav-user {
-    font-size: 0.8rem; color: var(--muted);
-    background: var(--card); border: 1px solid var(--border);
-    padding: 6px 14px; border-radius: 20px;
-  }
+/* Skills panel */
+.panel{margin:0 14px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.panel-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--sand3);margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{background:var(--ink4);border:1px solid var(--line2);border-radius:20px;padding:3px 9px;font-size:11px;color:var(--sand2);display:flex;align-items:center;gap:4px;transition:all .15s}
+.chip.on{background:var(--amber-d);border-color:var(--amber);color:var(--amber)}
+.chip button{background:none;border:none;color:inherit;cursor:pointer;font-size:12px;opacity:.6;transition:opacity .1s;line-height:1}
+.chip button:hover{opacity:1}
+.add-row{display:flex;gap:5px;margin-top:7px}
+.add-inp{flex:1;background:var(--ink4);border:1px solid var(--line);border-radius:8px;padding:5px 9px;color:var(--sand);font-family:var(--ff);font-size:11px;outline:none;transition:border .15s}
+.add-inp:focus{border-color:var(--amber)}
+.add-inp::placeholder{color:var(--sand3)}
+.add-btn{background:var(--amber-d);border:1px solid var(--amber);color:var(--amber);border-radius:8px;padding:5px 9px;font-size:13px;cursor:pointer;transition:all .15s}
+.add-btn:hover{background:var(--amber-g)}
+.pref-chip{background:var(--ink4);border:1px solid var(--line2);border-radius:20px;padding:3px 9px;font-size:11px;color:var(--sand2);cursor:pointer;transition:all .15s}
+.pref-chip.on{background:var(--teal-d);border-color:var(--teal);color:var(--teal)}
 
-  /* ─── BUTTONS ─── */
-  .btn {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem; font-weight: 500;
-    padding: 10px 22px; border-radius: 10px;
-    border: none; cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex; align-items: center; gap: 7px;
-  }
-  .btn-primary {
-    background: var(--accent); color: #fff;
-    box-shadow: 0 4px 20px rgba(79,142,247,0.35);
-  }
-  .btn-primary:hover { background: #3a7ae8; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,142,247,0.45); }
-  .btn-outline {
-    background: transparent; color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-  .btn-ghost:hover { background: var(--border); }
-  .btn-success { background: var(--accent2); color: #0b0f1a; }
-  .btn-success:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  .btn-sm { padding: 7px 16px; font-size: 0.82rem; border-radius: 8px; }
-  .btn-full { width: 100%; justify-content: center; padding: 13px; font-size: 1rem; }
+/* Nav */
+.nav-sec{padding:14px 20px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--sand3)}
+.nav-i{display:flex;align-items:center;gap:9px;padding:9px 20px;font-size:12px;font-weight:500;color:var(--sand2);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
+.nav-i:hover{background:var(--ink3);color:var(--sand)}
+.nav-i.on{background:var(--amber-d);color:var(--amber);border-left-color:var(--amber)}
+.nav-ico{font-size:14px;width:16px;text-align:center}
 
-  /* ─── LOGIN PAGE ─── */
-  #loginPage { align-items: center; justify-content: center; padding: 20px; }
-  .login-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 48px 40px;
-    width: 100%; max-width: 420px;
-    box-shadow: var(--shadow);
-    animation: fadeUp 0.5s ease;
-  }
-  .login-logo {
-    font-family: 'Syne', sans-serif;
-    font-size: 2.2rem; font-weight: 800;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 4px;
-  }
-  .login-tagline { color: var(--muted); font-size: 0.88rem; margin-bottom: 36px; }
-  .form-group { margin-bottom: 18px; }
-  label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-  input, select {
-    width: 100%; padding: 12px 16px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; color: var(--text);
-    font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
-    transition: border-color 0.2s;
-    outline: none;
-  }
-  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,0.12); }
-  select option { background: var(--surface); }
-  .login-err { color: var(--danger); font-size: 0.82rem; margin-top: 10px; display: none; }
-  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--muted); font-size: 0.78rem; }
-  .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+/* ── MAIN ── */
+.main{padding:28px;overflow-y:auto;background:var(--ink)}
 
-  /* ─── PAGE CONTENT ─── */
-  .page-content { padding: 36px 32px; flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; }
+/* ── PAGES ── */
+.page{display:none;animation:pgIn .25s ease}
+.page.on{display:block}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-  /* ─── PAGE HEADER ─── */
-  .page-header { margin-bottom: 32px; }
-  .page-header h1 { font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 700; line-height: 1.2; }
-  .page-header p { color: var(--muted); margin-top: 6px; font-size: 0.9rem; }
+/* ── PAGE HEADER ── */
+.ph{margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.pt{font-size:24px;font-weight:700;letter-spacing:-.4px}
+.pt em{font-style:normal;color:var(--amber)}
+.ps{font-size:12px;color:var(--sand3);margin-top:3px}
+.ai-dot-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--teal);font-weight:500}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 
-  /* ─── GRID ─── */
-  .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-  .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+/* ── STAT ROW ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:18px;transition:transform .2s}
+.stat:hover{transform:translateY(-2px)}
+.stat.a{border-top:2px solid var(--amber)}
+.stat.t{border-top:2px solid var(--teal)}
+.stat.r{border-top:2px solid var(--rose)}
+.stat.v{border-top:2px solid var(--violet)}
+.sl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--sand3);margin-bottom:7px}
+.sv{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1}
+.stat.a .sv{color:var(--amber)}.stat.t .sv{color:var(--teal)}.stat.r .sv{color:var(--rose)}.stat.v .sv{color:var(--violet)}
+.sd{font-size:11px;color:var(--sand3);margin-top:5px}
+.su{color:var(--teal)!important}
 
-  /* ─── CARD ─── */
-  .card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 24px;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-  .card:hover { border-color: rgba(79,142,247,0.4); transform: translateY(-2px); }
-  .card-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
-  .card-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; }
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g12{display:grid;grid-template-columns:1fr 2fr;gap:16px}
+.gc{display:grid;gap:16px}
 
-  /* ─── BADGE / CHIP ─── */
-  .chip {
-    display: inline-block; padding: 4px 11px;
-    border-radius: 20px; font-size: 0.75rem; font-weight: 500;
-    background: rgba(79,142,247,0.12); color: var(--accent);
-    border: 1px solid rgba(79,142,247,0.2); margin: 3px 3px 3px 0;
-  }
-  .chip.green { background: rgba(56,217,169,0.12); color: var(--accent2); border-color: rgba(56,217,169,0.2); }
-  .chip.orange { background: rgba(247,147,79,0.12); color: var(--accent3); border-color: rgba(247,147,79,0.2); }
+/* ── CARD ── */
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;transition:border-color .2s}
+.card:hover{border-color:var(--line2)}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.ct{font-size:13px;font-weight:600;color:var(--sand);display:flex;align-items:center;gap:7px}
+.badge{background:var(--amber-d);border:1px solid var(--amber);color:var(--amber);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:600}
+.ca{font-size:11px;color:var(--amber);cursor:pointer;font-weight:500}
+.cb{padding:16px 18px}
+.cw{padding:14px 18px}
 
-  /* ─── STUDENT DASHBOARD ─── */
-  .profile-banner {
-    background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(56,217,169,0.08));
-    border: 1px solid var(--border);
-    border-radius: 20px; padding: 30px;
-    display: flex; gap: 24px; align-items: center;
-    margin-bottom: 28px; flex-wrap: wrap;
-  }
-  .avatar {
-    width: 72px; height: 72px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff;
-    flex-shrink: 0;
-  }
-  .profile-info h2 { font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 700; }
-  .profile-info p { color: var(--muted); font-size: 0.85rem; margin-top: 3px; }
-  .profile-info .role-badge {
-    display: inline-block; margin-top: 8px;
-    padding: 3px 12px; border-radius: 20px; font-size: 0.75rem;
-    background: rgba(79,142,247,0.15); color: var(--accent); border: 1px solid rgba(79,142,247,0.3);
-  }
-  .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+/* ── REC ITEMS ── */
+.rec-list{display:flex;flex-direction:column;gap:8px}
+.rec{background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;cursor:pointer;transition:all .2s;animation:recIn .35s ease both}
+@keyframes recIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.rec:hover{border-color:var(--amber);background:var(--amber-d)}
+.rec-logo{width:42px;height:42px;border-radius:9px;background:var(--ink4);display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--line2)}
+.rec-title{font-size:12px;font-weight:600;color:var(--sand)}
+.rec-co{font-size:11px;color:var(--sand3);margin-top:1px}
+.rec-tags{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}
+.rtag{background:var(--ink4);border-radius:4px;padding:2px 6px;font-size:10px;color:var(--sand3)}
+.rtag.m{background:rgba(45,212,191,.1);color:var(--teal)}
+.salary-pill{display:inline-flex;align-items:center;gap:3px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.2);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--teal);font-weight:500;font-family:var(--fm);margin-top:5px}
+.mc{text-align:right;min-width:54px}
+.mp{font-size:18px;font-weight:800;font-family:var(--fm);line-height:1}
+.mp.h{color:var(--teal)}.mp.m{color:var(--amber)}.mp.l{color:var(--rose)}
+.ml{font-size:9px;color:var(--sand3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.mb{width:46px;height:3px;background:var(--ink4);border-radius:2px;margin-top:4px;overflow:hidden}
+.mf{height:100%;border-radius:2px}.mf.h{background:var(--teal)}.mf.m{background:var(--amber)}.mf.l{background:var(--rose)}
 
-  .skill-input-row { display: flex; gap: 10px; margin-bottom: 12px; }
-  .skill-input-row input { flex: 1; }
-  #skillTags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .skill-tag {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 12px 4px 12px; border-radius: 20px;
-    font-size: 0.78rem; background: rgba(56,217,169,0.12);
-    color: var(--accent2); border: 1px solid rgba(56,217,169,0.25); cursor: default;
-  }
-  .skill-tag span { cursor: pointer; opacity: 0.6; font-size: 0.9rem; }
-  .skill-tag span:hover { opacity: 1; }
+/* ── SCORE BREAKDOWN ── */
+.sbr{display:flex;flex-direction:column;gap:7px;padding:0 18px 16px}
+.sbrow{display:flex;align-items:center;gap:9px;font-size:11px}
+.sbf{width:120px;color:var(--sand2)}
+.sbw{flex:1;height:4px;background:var(--ink4);border-radius:2px;overflow:hidden}
+.sbfill{height:100%;border-radius:2px;transition:width .8s ease}
+.sbp{width:28px;text-align:right;font-family:var(--fm);color:var(--sand3);font-size:10px}
 
-  .upload-zone {
-    border: 2px dashed var(--border); border-radius: 12px;
-    padding: 28px; text-align: center; color: var(--muted);
-    transition: border-color 0.2s; cursor: pointer;
-  }
-  .upload-zone:hover { border-color: var(--accent); color: var(--accent); }
-  .upload-zone .icon { font-size: 2rem; margin-bottom: 8px; }
-  .upload-zone p { font-size: 0.85rem; }
+/* ── FORM INPUTS ── */
+.fi{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--sand);font-family:var(--ff);font-size:12px;outline:none;transition:border .15s}
+.fi:focus{border-color:var(--amber)}
+.fi::placeholder{color:var(--sand3)}
+.fl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--sand3);margin-bottom:4px}
+.fgrp{display:flex;flex-direction:column;gap:3px}
+.btn-save{background:var(--amber-d);border:1px solid var(--amber);color:var(--amber);border-radius:var(--r);padding:9px;font-family:var(--ff);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;width:100%}
+.btn-save:hover{background:var(--amber-g)}
+.filter-sel{background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--sand);font-family:var(--ff);font-size:11px;outline:none;cursor:pointer}
+.filter-sel:focus{border-color:var(--amber)}
+.filter-sel option{background:var(--ink3)}
+.search-inp{background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--sand);font-family:var(--ff);font-size:11px;outline:none;min-width:180px;transition:border .15s}
+.search-inp:focus{border-color:var(--amber)}
+.search-inp::placeholder{color:var(--sand3)}
 
-  /* ─── ALUMNI PAGE ─── */
-  .alumni-card { position: relative; overflow: hidden; }
-  .alumni-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-  }
-  .alumni-avatar {
-    width: 56px; height: 56px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: #fff;
-    margin-bottom: 14px;
-  }
-  .alumni-company { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.82rem; margin: 6px 0 4px; }
-  .alumni-role { font-size: 0.82rem; }
-  .connect-btn { margin-top: 16px; }
-  .batch-tag { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+/* ── DEPT TABLE ── */
+.dt{padding:0 18px 16px}
+.dr{display:grid;grid-template-columns:1.5fr 54px 54px 1fr 46px;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:11px}
+.dr:last-child{border-bottom:none}
+.dr.hdr{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--sand3);padding-bottom:6px}
+.dn{font-weight:500;color:var(--sand)}.dnum{font-family:var(--fm);text-align:center}.dpl{color:var(--teal);font-family:var(--fm);text-align:center}
+.dbw{height:4px;background:var(--ink4);border-radius:2px;overflow:hidden}
+.dbf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--teal))}
+.dpct{font-size:10px;font-family:var(--fm);color:var(--amber);text-align:right}
 
-  /* ─── JOB LISTINGS ─── */
-  .search-bar {
-    display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;
-  }
-  .search-bar input { flex: 1; min-width: 200px; }
-  .job-card { position: relative; }
-  .job-card-top { display: flex; gap: 14px; align-items: flex-start; }
-  .company-logo {
-    width: 48px; height: 48px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
-    flex-shrink: 0; color: #fff;
-  }
-  .job-meta { flex: 1; }
-  .job-meta h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
-  .job-meta .co { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
-  .job-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 10px; }
-  .job-type { font-size: 0.78rem; color: var(--accent3); background: rgba(247,147,79,0.1); border: 1px solid rgba(247,147,79,0.2); padding: 3px 10px; border-radius: 20px; }
-  .no-results { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 0.9rem; }
+/* ── SALARY STATS ── */
+.ss{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 18px 14px}
+.sstat{text-align:center;background:var(--ink3);border-radius:var(--r);padding:12px;border:1px solid var(--line)}
+.ssv{font-size:20px;font-weight:800;font-family:var(--fm)}
+.ssv.min{color:var(--rose)}.ssv.avg{color:var(--amber)}.ssv.max{color:var(--teal)}
+.ssl{font-size:10px;color:var(--sand3);text-transform:uppercase;letter-spacing:.8px;margin-top:3px}
 
-  /* ─── ADMIN PAGE ─── */
-  .stat-row { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
-  .stat-card {
-    flex: 1; min-width: 160px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 22px;
-  }
-  .stat-card .num { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; }
-  .stat-card .lbl { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
-  .stat-card.blue .num { color: var(--accent); }
-  .stat-card.green .num { color: var(--accent2); }
-  .stat-card.orange .num { color: var(--accent3); }
-  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-  thead th { text-align: left; padding: 10px 14px; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  tbody td { padding: 13px 14px; border-bottom: 1px solid rgba(31,45,69,0.6); }
-  tbody tr:hover { background: rgba(79,142,247,0.04); }
-  .status { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
-  .status.placed { background: rgba(56,217,169,0.12); color: var(--accent2); }
-  .status.searching { background: rgba(79,142,247,0.12); color: var(--accent); }
-  .status.pending { background: rgba(247,147,79,0.12); color: var(--accent3); }
+/* ── RING ── */
+.ring-wrap{display:flex;align-items:center;justify-content:center;padding:18px;gap:24px}
+.ring-area{position:relative;width:150px;height:150px}
+.ring-ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-size:28px;font-weight:800;color:var(--teal);font-family:var(--fm);line-height:1}
+.ring-lbl{font-size:10px;color:var(--sand3);margin-top:2px}
+.ring-leg{display:flex;flex-direction:column;gap:10px}
+.rleg-row{display:flex;align-items:center;gap:8px}
+.rdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.rleg-l{font-size:11px;color:var(--sand2)}.rleg-v{font-size:12px;font-weight:700;font-family:var(--fm);margin-left:auto}
 
-  /* ─── TOAST ─── */
-  #toast {
-    position: fixed; bottom: 28px; right: 28px;
-    background: var(--accent2); color: #0b0f1a;
-    padding: 12px 22px; border-radius: 10px;
-    font-size: 0.88rem; font-weight: 500;
-    transform: translateY(80px); opacity: 0;
-    transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
-    z-index: 9999; pointer-events: none;
-    box-shadow: 0 8px 24px rgba(56,217,169,0.35);
-  }
-  #toast.show { transform: translateY(0); opacity: 1; }
+/* ── TRENDS ── */
+.tgrid{display:flex;flex-direction:column;gap:8px;padding:0 18px 16px}
+.trow{display:flex;align-items:center;gap:10px}
+.trank{font-size:10px;font-weight:700;font-family:var(--fm);color:var(--sand3);width:18px;text-align:right}
+.tlbl{font-size:12px;font-weight:500;color:var(--sand);width:100px;flex-shrink:0}
+.tbw{flex:1;height:5px;background:var(--ink4);border-radius:3px;overflow:hidden}
+.tb{height:100%;border-radius:3px;transition:width 1s ease}
+.tpct{font-size:10px;font-family:var(--fm);color:var(--sand3);width:28px;text-align:right}
+.tbadge{font-size:9px;padding:2px 6px;border-radius:20px;font-weight:600;width:42px;text-align:center}
+.hot{background:rgba(251,113,133,.15);color:var(--rose)}
+.rising{background:rgba(245,166,35,.15);color:var(--amber)}
+.stable{background:rgba(45,212,191,.12);color:var(--teal)}
 
-  /* ─── ANIMATIONS ─── */
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-in { animation: fadeUp 0.4s ease both; }
+/* ── ROLE TILES ── */
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 18px 16px}
+.rtile{background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:12px;transition:all .2s}
+.rtile:hover{border-color:var(--violet);background:var(--violet-d)}
+.remi{font-size:20px;margin-bottom:5px}.rname{font-size:11px;font-weight:600;color:var(--sand)}.rdem{font-size:10px;color:var(--sand3);margin-top:1px}
+.dmtr{height:3px;background:var(--ink4);border-radius:2px;margin-top:7px;overflow:hidden}
+.dmf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--violet),var(--sky))}
 
-  /* ─── SECTION TITLE ─── */
-  .section-label {
-    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px;
-    color: var(--accent); font-weight: 600; margin-bottom: 18px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r);padding:11px 16px;font-size:12px;font-weight:500;color:var(--sand);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s ease;box-shadow:0 4px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:7px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--teal)}.toast.err{border-color:var(--rose)}
 
-  /* ─── SCROLLBAR ─── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* ── CHART WRAP ── */
+.cwrap{position:relative;padding:14px 18px}
+.cwrap canvas{max-height:210px}
 
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 640px) {
-    .page-content { padding: 20px 16px; }
-    nav { padding: 14px 16px; }
-    .login-card { padding: 32px 24px; }
-    .profile-banner { padding: 20px; }
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .stat-row { flex-direction: column; }
-  }
+/* ── LINKEDIN / GITHUB MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{background:var(--ink2);border:1px solid var(--line2);border-radius:var(--rl);width:460px;max-width:calc(100vw - 32px);animation:modalIn .25s ease;overflow:hidden}
+@keyframes modalIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-head{padding:20px 22px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--sand3);font-size:18px;cursor:pointer;transition:color .15s;line-height:1}
+.modal-close:hover{color:var(--sand)}
+.modal-body{padding:22px}
+.modal-logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+.modal-logo.li{background:rgba(10,102,194,.2);border:1px solid rgba(10,102,194,.4)}
+.modal-logo.gh{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15)}
+.modal-desc{font-size:12px;color:var(--sand3);margin-bottom:18px;line-height:1.6}
+.modal-field{margin-bottom:14px}
+.preview-card{background:var(--ink3);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:14px;display:none}
+.preview-card.show{display:block}
+.preview-row{display:flex;align-items:center;gap:12px}
+.preview-av{width:40px;height:40px;border-radius:50%;background:var(--ink4);border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:16px}
+.preview-name{font-size:13px;font-weight:600}
+.preview-sub{font-size:11px;color:var(--sand3);margin-top:2px}
+.preview-stats{display:flex;gap:14px;margin-top:10px}
+.pstat{text-align:center}
+.pstat-v{font-size:14px;font-weight:700;font-family:var(--fm);color:var(--amber)}
+.pstat-l{font-size:10px;color:var(--sand3)}
+.btn-connect{width:100%;padding:10px;background:linear-gradient(135deg,var(--amber),#e09020);border:none;border-radius:var(--r);color:#000;font-family:var(--ff);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:4px}
+.btn-connect:hover{opacity:.85}
+.btn-connect.li-btn{background:linear-gradient(135deg,#0a66c2,#0077b5);color:#fff}
+.btn-connect.gh-btn{background:linear-gradient(135deg,#333,#555);color:#fff}
+
+/* ── FAQ / AI CHATBOT ── */
+.faq-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--amber),#e09020);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(245,166,35,.4);transition:all .2s;z-index:300}
+.faq-fab:hover{transform:scale(1.08)}
+.faq-panel{position:fixed;bottom:88px;right:24px;width:360px;max-height:520px;background:var(--ink2);border:1px solid var(--line2);border-radius:var(--rl);display:flex;flex-direction:column;z-index:300;box-shadow:0 8px 40px rgba(0,0,0,.6);transform:translateY(20px) scale(.95);opacity:0;pointer-events:none;transition:all .25s ease}
+.faq-panel.on{transform:translateY(0) scale(1);opacity:1;pointer-events:all}
+.faq-head{padding:16px 18px 13px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.faq-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.faq-close{background:none;border:none;color:var(--sand3);font-size:16px;cursor:pointer}
+.faq-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:260px;max-height:320px}
+.msg{max-width:86%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.55;animation:msgIn .2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.bot{background:var(--ink3);border:1px solid var(--line);color:var(--sand);border-bottom-left-radius:4px;align-self:flex-start}
+.msg.usr{background:linear-gradient(135deg,var(--amber),#d4880f);color:#000;font-weight:500;border-bottom-right-radius:4px;align-self:flex-end}
+.msg.typing{opacity:.6}
+.faq-chips{padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:5px}
+.faq-chip{background:var(--ink3);border:1px solid var(--line2);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--sand2);cursor:pointer;transition:all .15s}
+.faq-chip:hover{border-color:var(--amber);color:var(--amber)}
+.faq-inp-row{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:7px}
+.faq-inp{flex:1;background:var(--ink3);border:1px solid var(--line);border-radius:20px;padding:7px 12px;color:var(--sand);font-family:var(--ff);font-size:12px;outline:none;transition:border .15s}
+.faq-inp:focus{border-color:var(--amber)}
+.faq-inp::placeholder{color:var(--sand3)}
+.faq-send{background:var(--amber);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:opacity .15s;flex-shrink:0}
+.faq-send:hover{opacity:.8}
+.faq-powered{padding:6px 14px 10px;font-size:10px;color:var(--sand3);text-align:center}
+
+/* ── PROFILE SOCIAL LINKED BADGES ── */
+.linked-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;margin:2px}
+.lb-li{background:rgba(10,102,194,.15);border:1px solid rgba(10,102,194,.3);color:#7eb3e8}
+.lb-gh{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--sand2)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--ink2)}
+::-webkit-scrollbar-thumb{background:var(--ink4);border-radius:4px}
+
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .sb{position:relative;height:auto}
+  .stats{grid-template-columns:1fr 1fr}
+  .g2,.g3,.g12,.gc{grid-template-columns:1fr}
+  .main{padding:16px}
+  .faq-panel{right:8px;width:calc(100vw - 16px)}
+}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════ LOGIN PAGE ═══════════════════ -->
-<div id="loginPage" class="section active">
-  <div style="display:flex;align-items:center;justify-content:center;flex:1;padding:20px;min-height:100vh;">
-    <div class="login-card">
-      <div class="login-logo">PlaceX</div>
-      <p class="login-tagline">Your gateway to career opportunities 🚀</p>
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="loginUser" placeholder="e.g. student01" />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="loginPass" placeholder="••••••••" />
-      </div>
-      <div class="form-group">
-        <label>Login As</label>
-        <select id="loginRole">
-          <option value="">— Select Role —</option>
-          <option value="student">🎓 Student</option>
-          <option value="alumni">🏆 Alumni</option>
-          <option value="admin">🛡️ Admin / T&P</option>
-        </select>
-      </div>
-      <p class="login-err" id="loginErr">⚠ Please fill all fields.</p>
-      <div class="divider">or continue with demo</div>
-      <button class="btn btn-primary btn-full" onclick="login()">Login to Portal</button>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button class="btn btn-outline btn-sm" style="flex:1" onclick="quickLogin('student')">Student Demo</button>
-        <button class="btn btn-outline btn-sm" style="flex:1" onclick="quickLogin('alumni')">Alumni Demo</button>
-        <button class="btn btn-outline btn-sm" style="flex:1" onclick="quickLogin('admin')">Admin Demo</button>
-      </div>
+<div class="shell">
+
+<!-- ════ SIDEBAR ════ -->
+<aside class="sb">
+  <div class="sb-head">
+    <div class="logo">Place<em>IQ</em></div>
+    <div class="logo-sub">AI Career Platform</div>
+  </div>
+
+  <!-- Student card -->
+  <div class="stu-card">
+    <div class="stu-av" id="av-letter">A</div>
+    <div class="stu-name" id="sb-name">Aarav Kumar</div>
+    <div class="stu-meta" id="sb-meta">Computer Science &middot; Sem 7</div>
+    <div class="cgpa-row">
+      <span class="cgpa-lbl">CGPA</span>
+      <div class="cgpa-bar"><div class="cgpa-fill" id="cgpa-bar" style="width:87%"></div></div>
+      <span class="cgpa-val" id="cgpa-val">8.7</span>
+    </div>
+    <!-- Social links -->
+    <div class="social-row" id="social-row">
+      <span class="social-btn" id="li-btn-sb" onclick="openModal('linkedin')">
+        <span class="social-icon">in</span> LinkedIn
+      </span>
+      <span class="social-btn" id="gh-btn-sb" onclick="openModal('github')">
+        <span class="social-icon">&#x2665;</span> GitHub
+      </span>
+    </div>
+    <div id="linked-badges" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px"></div>
+  </div>
+
+  <!-- Skills -->
+  <div class="panel">
+    <div class="panel-t">My Skills</div>
+    <div class="chips" id="skill-chips"></div>
+    <div class="add-row">
+      <input class="add-inp" id="skill-inp" placeholder="Add skill..." onkeydown="if(event.key==='Enter')addSkill()">
+      <button class="add-btn" onclick="addSkill()">+</button>
     </div>
   </div>
-</div>
 
-<!-- ═══════════════════ STUDENT DASHBOARD ═══════════════════ -->
-<div id="studentPage" class="section">
-  <nav>
-    <span class="nav-brand">PlaceX</span>
-    <div class="nav-right">
-      <span class="nav-user" id="studentNavName">Student</span>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
-    </div>
-  </nav>
-  <div class="page-content fade-in">
-    <!-- Profile Banner -->
-    <div class="profile-banner">
-      <div class="avatar" id="studentAvatar">A</div>
-      <div class="profile-info">
-        <h2 id="studentNameDisplay">Arjun Mehta</h2>
-        <p>B.Tech Computer Science · 2025 Batch</p>
-        <span class="role-badge">🎓 Student</span>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="show('jobsPage')">Browse Jobs →</button>
-        <button class="btn btn-ghost btn-sm" onclick="show('alumniPage')">Meet Alumni</button>
-      </div>
-    </div>
-
-    <!-- Skills Section -->
-    <div class="section-label">My Skills</div>
-    <div class="card" style="margin-bottom:20px;">
-      <div class="skill-input-row">
-        <input type="text" id="skillInput" placeholder="Type a skill and press Add..." onkeydown="if(event.key==='Enter') addSkill()" />
-        <button class="btn btn-success btn-sm" onclick="addSkill()">+ Add</button>
-      </div>
-      <div id="skillTags">
-        <div class="skill-tag">JavaScript <span onclick="removeSkill(this)">✕</span></div>
-        <div class="skill-tag">React <span onclick="removeSkill(this)">✕</span></div>
-        <div class="skill-tag">Python <span onclick="removeSkill(this)">✕</span></div>
-        <div class="skill-tag">SQL <span onclick="removeSkill(this)">✕</span></div>
-      </div>
-    </div>
-
-    <!-- Resume Upload -->
-    <div class="section-label">Resume</div>
-    <div class="card" style="margin-bottom:20px;">
-      <div class="upload-zone" onclick="fakeUpload()" id="uploadZone">
-        <div class="icon">📄</div>
-        <p id="uploadText">Click to upload your resume (PDF, DOC)</p>
-        <p style="font-size:0.75rem;margin-top:6px;">Max 5MB</p>
-      </div>
-      <input type="file" id="resumeFile" style="display:none" accept=".pdf,.doc,.docx" onchange="handleFile()" />
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="section-label">Explore</div>
-    <div class="grid-2">
-      <div class="card" style="cursor:pointer;text-align:center;" onclick="show('jobsPage')">
-        <div style="font-size:2rem;margin-bottom:10px;">💼</div>
-        <div class="card-title">Job Listings</div>
-        <div class="card-sub">Browse and apply to openings</div>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;">View Jobs →</button>
-      </div>
-      <div class="card" style="cursor:pointer;text-align:center;" onclick="show('alumniPage')">
-        <div style="font-size:2rem;margin-bottom:10px;">🤝</div>
-        <div class="card-title">Alumni Network</div>
-        <div class="card-sub">Connect with seniors in industry</div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:8px;">Meet Alumni →</button>
-      </div>
-    </div>
+  <!-- Role prefs -->
+  <div class="panel">
+    <div class="panel-t">Role Preferences</div>
+    <div class="chips" id="pref-chips"></div>
   </div>
-</div>
 
-<!-- ═══════════════════ ALUMNI PAGE ═══════════════════ -->
-<div id="alumniPage" class="section">
-  <nav>
-    <span class="nav-brand">PlaceX</span>
-    <div class="nav-right">
-      <span class="nav-user">Alumni Network</span>
-      <button class="btn btn-outline btn-sm" onclick="goBack()">← Back</button>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
-    </div>
-  </nav>
-  <div class="page-content fade-in">
-    <div class="page-header">
-      <h1>Alumni Network 🤝</h1>
-      <p>Connect with seniors who've been where you are</p>
-    </div>
-    <div class="grid-3">
+  <!-- Nav -->
+  <div class="nav-sec">Modules</div>
+  <div class="nav-i on" id="nav-rec" onclick="goto('rec')"><span class="nav-ico">&#x1F916;</span> AI Recommendations</div>
+  <div class="nav-i" id="nav-ana" onclick="goto('ana')"><span class="nav-ico">&#x1F4CA;</span> Analytics Dashboard</div>
+  <div class="nav-i" id="nav-trd" onclick="goto('trd')"><span class="nav-ico">&#x1F525;</span> Career Trends</div>
+  <div class="nav-i" id="nav-prf" onclick="goto('prf')"><span class="nav-ico">&#x2699;&#xFE0F;</span> Preferences</div>
+  <div class="nav-i" id="nav-soc" onclick="goto('soc')"><span class="nav-ico">&#x1F517;</span> Social Profiles</div>
+</aside>
 
-      <div class="card alumni-card">
-        <div class="alumni-avatar" style="background:linear-gradient(135deg,#4f8ef7,#38d9a9);">PS</div>
-        <div class="card-title">Priya Sharma</div>
-        <div class="batch-tag">Class of 2022 · CSE</div>
-        <div class="alumni-company">🏢 Google</div>
-        <div class="alumni-role"><span class="chip">Software Engineer II</span></div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Focus on DSA early. Internships are gold."</p>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
-          <span class="chip">Java</span><span class="chip">System Design</span><span class="chip">Kotlin</span>
-        </div>
-        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Priya!')">Connect</button>
+<!-- ════ MAIN ════ -->
+<main class="main">
+
+  <!-- ── AI RECOMMENDATIONS ── -->
+  <div class="page on" id="page-rec">
+    <div class="ph">
+      <div>
+        <div class="pt">AI Job <em>Recommendations</em></div>
+        <div class="ps">Personalised matches based on your skills, CGPA and preferences</div>
       </div>
+      <div class="ai-dot-row"><div class="ai-dot"></div>Engine Active</div>
+    </div>
 
-      <div class="card alumni-card">
-        <div class="alumni-avatar" style="background:linear-gradient(135deg,#f7934f,#f76f6f);">RK</div>
-        <div class="card-title">Rohan Kulkarni</div>
-        <div class="batch-tag">Class of 2021 · IT</div>
-        <div class="alumni-company">🏢 Microsoft</div>
-        <div class="alumni-role"><span class="chip green">Senior SDE</span></div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Open source contributions open doors."</p>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
-          <span class="chip">C#</span><span class="chip">.NET</span><span class="chip">Azure</span>
+    <div class="g12" style="margin-bottom:18px">
+      <div class="gc">
+        <div class="card">
+          <div class="ch"><div class="ct">Match Formula</div></div>
+          <div class="sbr" id="formula-bd"></div>
         </div>
-        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Rohan!')">Connect</button>
-      </div>
-
-      <div class="card alumni-card">
-        <div class="alumni-avatar" style="background:linear-gradient(135deg,#a78bf7,#4f8ef7);">AN</div>
-        <div class="card-title">Ananya Nair</div>
-        <div class="batch-tag">Class of 2023 · CSE</div>
-        <div class="alumni-company">🏢 Amazon</div>
-        <div class="alumni-role"><span class="chip orange">SDE-I</span></div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"STAR format for interviews — it works."</p>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
-          <span class="chip">Python</span><span class="chip">AWS</span><span class="chip">Django</span>
+        <div class="card">
+          <div class="ch"><div class="ct">Preferred Companies</div></div>
+          <div class="cb" id="pref-co-panel"></div>
         </div>
-        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Ananya!')">Connect</button>
       </div>
-
-      <div class="card alumni-card">
-        <div class="alumni-avatar" style="background:linear-gradient(135deg,#38d9a9,#4f8ef7);">VR</div>
-        <div class="card-title">Vikram Rao</div>
-        <div class="batch-tag">Class of 2020 · ECE</div>
-        <div class="alumni-company">🏢 Infosys</div>
-        <div class="alumni-role"><span class="chip green">Tech Lead</span></div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Soft skills are underrated. Communicate clearly."</p>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
-          <span class="chip">Java</span><span class="chip">Spring Boot</span><span class="chip">MySQL</span>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Top Matches <span class="badge" id="rec-badge">0 jobs</span></div>
+          <select class="filter-sel" id="rec-sort" onchange="renderRec()">
+            <option value="score">Best Match</option>
+            <option value="salary">Highest Salary</option>
+            <option value="cgpa">CGPA Fit</option>
+          </select>
         </div>
-        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Vikram!')">Connect</button>
+        <div class="cb"><div class="rec-list" id="rec-list"></div></div>
       </div>
-
-      <div class="card alumni-card">
-        <div class="alumni-avatar" style="background:linear-gradient(135deg,#f76f6f,#f7934f);">SM</div>
-        <div class="card-title">Sneha Mishra</div>
-        <div class="batch-tag">Class of 2022 · MCA</div>
-        <div class="alumni-company">🏢 Flipkart</div>
-        <div class="alumni-role"><span class="chip">Data Analyst</span></div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Build a portfolio. Projects speak louder."</p>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
-          <span class="chip">Python</span><span class="chip">Tableau</span><span class="chip">SQL</span>
-        </div>
-        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Sneha!')">Connect</button>
-      </div>
-
-      <div class="card alumni-card">
-        <div class="alumni-avatar" style="background:linear-gradient(135deg,#4f8ef7,#a78bf7);">KP</div>
-        <div class="card-title">Karan Patel</div>
-        <div class="batch-tag">Class of 2021 · CSE</div>
-        <div class="alumni-company">🏢 Razorpay</div>
-        <div class="alumni-role"><span class="chip orange">Backend Engineer</span></div>
-        <p style="font-size:0.82rem;color:var(--muted);margin-top:10px;">"Startups move fast — great for learning."</p>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;">
-          <span class="chip">Node.js</span><span class="chip">Go</span><span class="chip">Redis</span>
-        </div>
-        <button class="btn btn-outline btn-sm connect-btn" onclick="showToast('Connection request sent to Karan!')">Connect</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════ JOBS PAGE ═══════════════════ -->
-<div id="jobsPage" class="section">
-  <nav>
-    <span class="nav-brand">PlaceX</span>
-    <div class="nav-right">
-      <span class="nav-user">Job Listings</span>
-      <button class="btn btn-outline btn-sm" onclick="goBack()">← Back</button>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
-    </div>
-  </nav>
-  <div class="page-content fade-in">
-    <div class="page-header">
-      <h1>Job Listings 💼</h1>
-      <p>Explore and apply to campus recruitment opportunities</p>
     </div>
 
-    <div class="search-bar">
-      <input type="text" id="jobSearch" placeholder="🔍 Filter by skill, company or title..." oninput="filterJobs()" />
-      <select id="jobFilter" onchange="filterJobs()" style="max-width:180px;">
-        <option value="">All Types</option>
-        <option value="full-time">Full-Time</option>
-        <option value="internship">Internship</option>
-        <option value="contract">Contract</option>
-      </select>
-    </div>
-
-    <div id="jobList" class="grid-2"></div>
-    <div id="noResults" class="no-results" style="display:none;">🔭 No jobs match your filter. Try different keywords.</div>
-  </div>
-</div>
-
-<!-- ═══════════════════ ADMIN PAGE ═══════════════════ -->
-<div id="adminPage" class="section">
-  <nav>
-    <span class="nav-brand">PlaceX</span>
-    <div class="nav-right">
-      <span class="nav-user">Admin / T&P</span>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
-    </div>
-  </nav>
-  <div class="page-content fade-in">
-    <div class="page-header">
-      <h1>T&P Dashboard 🛡️</h1>
-      <p>Placement statistics and student management</p>
-    </div>
-
-    <div class="stat-row">
-      <div class="stat-card blue"><div class="num">248</div><div class="lbl">Registered Students</div></div>
-      <div class="stat-card green"><div class="num">134</div><div class="lbl">Students Placed</div></div>
-      <div class="stat-card orange"><div class="num">42</div><div class="lbl">Active Job Listings</div></div>
-      <div class="stat-card"><div class="num" style="color:var(--text)">18</div><div class="lbl">Companies Visiting</div></div>
-    </div>
-
-    <div class="section-label">Recent Placements</div>
     <div class="card">
-      <table>
-        <thead><tr>
-          <th>Student</th><th>Branch</th><th>Company</th><th>Package</th><th>Status</th>
-        </tr></thead>
-        <tbody>
-          <tr><td>Aarav Singh</td><td>CSE</td><td>Wipro</td><td>7.5 LPA</td><td><span class="status placed">Placed</span></td></tr>
-          <tr><td>Divya Rao</td><td>IT</td><td>TCS</td><td>6.0 LPA</td><td><span class="status placed">Placed</span></td></tr>
-          <tr><td>Mehul Joshi</td><td>ECE</td><td>—</td><td>—</td><td><span class="status searching">Searching</span></td></tr>
-          <tr><td>Pooja Verma</td><td>MCA</td><td>Cognizant</td><td>5.5 LPA</td><td><span class="status placed">Placed</span></td></tr>
-          <tr><td>Siddharth K</td><td>CSE</td><td>—</td><td>—</td><td><span class="status pending">Pending</span></td></tr>
-          <tr><td>Tanvi Desai</td><td>IT</td><td>Infosys</td><td>6.5 LPA</td><td><span class="status placed">Placed</span></td></tr>
-        </tbody>
-      </table>
+      <div class="ch">
+        <div class="ct">All Jobs with Match Scores</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="search-inp" id="job-search" placeholder="Search..." oninput="renderAllJobs()">
+          <select class="filter-sel" id="job-loc" onchange="renderAllJobs()">
+            <option value="">All Locations</option>
+            <option>Bangalore</option><option>Hyderabad</option>
+            <option>Mumbai</option><option>Pune</option><option>Remote</option>
+          </select>
+        </div>
+      </div>
+      <div class="cb" id="all-jobs"></div>
     </div>
-    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="showToast('Placement report exported!')">Export Report</button>
-      <button class="btn btn-outline" onclick="show('jobsPage')">Manage Job Listings</button>
+  </div>
+
+  <!-- ── ANALYTICS ── -->
+  <div class="page" id="page-ana">
+    <div class="ph">
+      <div><div class="pt">Analytics <em>Dashboard</em></div><div class="ps">Placement stats, salary trends, departmental insights</div></div>
     </div>
+    <div class="stats" id="ana-stats"></div>
+    <div class="g2" style="margin-bottom:18px">
+      <div class="card">
+        <div class="ch"><div class="ct">Placement Rate</div></div>
+        <div class="ring-wrap">
+          <div class="ring-area">
+            <canvas id="ch-ring"></canvas>
+            <div class="ring-ctr"><div class="ring-pct" id="ring-pct">72%</div><div class="ring-lbl">Placed</div></div>
+          </div>
+          <div class="ring-leg" id="ring-leg"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Dept-wise Placements</div></div>
+        <div class="dt" id="dept-tbl"></div>
+      </div>
+    </div>
+    <div class="g2" style="margin-bottom:18px">
+      <div class="card">
+        <div class="ch"><div class="ct">Salary Trends (LPA)</div></div>
+        <div class="ss" id="sal-stats"></div>
+        <div class="cwrap"><canvas id="ch-sal"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Company-wise Avg Salary</div></div>
+        <div class="cwrap"><canvas id="ch-co-sal"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="ch"><div class="ct">Application Status</div></div>
+        <div class="cwrap"><canvas id="ch-app"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Monthly Placements</div></div>
+        <div class="cwrap"><canvas id="ch-mth"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TRENDS ── -->
+  <div class="page" id="page-trd">
+    <div class="ph">
+      <div><div class="pt">Career <em>Trends</em></div><div class="ps">Trending skills and in-demand roles</div></div>
+    </div>
+    <div class="g2" style="margin-bottom:18px">
+      <div class="card">
+        <div class="ch"><div class="ct">Trending Skills</div></div>
+        <div class="tgrid" id="trend-skills"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">In-Demand Roles</div></div>
+        <div class="rgrid" id="demand-roles"></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="ch"><div class="ct">Skill Demand Radar</div></div>
+        <div class="cwrap" style="height:260px"><canvas id="ch-radar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Salary by Role</div></div>
+        <div class="cwrap" style="height:260px"><canvas id="ch-role-sal"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PREFERENCES ── -->
+  <div class="page" id="page-prf">
+    <div class="ph">
+      <div><div class="pt">Student <em>Preferences</em></div><div class="ps">Configure your profile and job preferences</div></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="ch"><div class="ct">Student Profile</div></div>
+        <div class="cb">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="fgrp"><div class="fl">Full Name</div><input class="fi" id="p-name" placeholder="Your name"></div>
+            <div class="fgrp"><div class="fl">Branch</div>
+              <select class="fi" id="p-branch" style="cursor:pointer">
+                <option>Computer Science</option><option>Information Technology</option>
+                <option>Electronics &amp; Communication</option><option>Mechanical Engineering</option><option>Civil Engineering</option>
+              </select>
+            </div>
+            <div class="fgrp"><div class="fl">CGPA</div><input class="fi" id="p-cgpa" type="number" step="0.1" min="0" max="10" placeholder="e.g. 8.5"></div>
+            <div class="fgrp"><div class="fl">Expected Salary (LPA)</div><input class="fi" id="p-sal" type="number" placeholder="e.g. 10"></div>
+            <button class="btn-save" onclick="saveProfile()">Save Profile</button>
+          </div>
+        </div>
+      </div>
+      <div class="gc">
+        <div class="card">
+          <div class="ch"><div class="ct">Preferred Roles</div></div>
+          <div class="cb" id="pref-roles-panel"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Preferred Companies</div></div>
+          <div class="cb" id="pref-cos-panel"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SOCIAL PROFILES ── -->
+  <div class="page" id="page-soc">
+    <div class="ph">
+      <div><div class="pt">Social <em>Profiles</em></div><div class="ps">Link your LinkedIn and GitHub to boost recommendation accuracy</div></div>
+    </div>
+    <div class="g2">
+      <!-- LinkedIn card -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">LinkedIn Profile</div>
+          <span id="li-status-badge"></span>
+        </div>
+        <div class="cb">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="width:52px;height:52px;border-radius:14px;background:rgba(10,102,194,.2);border:1px solid rgba(10,102,194,.35);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#4f9cdf">in</div>
+            <div style="font-size:12px;color:var(--sand3);line-height:1.6">Connect your LinkedIn profile to let recruiters find you and improve role matching based on your work history and connections.</div>
+            <div class="fgrp"><div class="fl">LinkedIn Profile URL</div><input class="fi" id="li-url" placeholder="https://linkedin.com/in/yourname"></div>
+            <div id="li-preview" class="preview-card"></div>
+            <button class="btn-connect li-btn" onclick="connectLinkedIn()">Connect LinkedIn</button>
+          </div>
+        </div>
+      </div>
+      <!-- GitHub card -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">GitHub Profile</div>
+          <span id="gh-status-badge"></span>
+        </div>
+        <div class="cb">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:22px">&#x1F40D;</div>
+            <div style="font-size:12px;color:var(--sand3);line-height:1.6">Link your GitHub to automatically detect your technical skills from repositories, contributions and language usage.</div>
+            <div class="fgrp"><div class="fl">GitHub Username</div><input class="fi" id="gh-user" placeholder="your-github-username"></div>
+            <div id="gh-preview" class="preview-card"></div>
+            <button class="btn-connect gh-btn" onclick="connectGitHub()">Connect GitHub</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Benefits row -->
+    <div class="g3" style="margin-top:18px">
+      <div class="card">
+        <div class="cb" style="text-align:center;padding:22px">
+          <div style="font-size:28px;margin-bottom:8px">&#x1F4CA;</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px">Smarter Matches</div>
+          <div style="font-size:11px;color:var(--sand3);line-height:1.6">GitHub skills auto-populate your profile and increase recommendation accuracy by up to 40%.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cb" style="text-align:center;padding:22px">
+          <div style="font-size:28px;margin-bottom:8px">&#x1F91D;</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px">Recruiter Visibility</div>
+          <div style="font-size:11px;color:var(--sand3);line-height:1.6">LinkedIn connection makes your profile visible to 47+ companies visiting our placement portal.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cb" style="text-align:center;padding:22px">
+          <div style="font-size:28px;margin-bottom:8px">&#x1F3C6;</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px">Portfolio Score</div>
+          <div style="font-size:11px;color:var(--sand3);line-height:1.6">Combined social score boosts your placement rank among peers in the same department.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- ════ MODAL ════ -->
+<div class="overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Connect Profile</div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
 
-<!-- ═══════════════════ ALUMNI DASHBOARD ═══════════════════ -->
-<div id="alumniDashPage" class="section">
-  <nav>
-    <span class="nav-brand">PlaceX</span>
-    <div class="nav-right">
-      <span class="nav-user" id="alumniNavName">Alumni</span>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
-    </div>
-  </nav>
-  <div class="page-content fade-in">
-    <div class="page-header">
-      <h1>Welcome back! 🏆</h1>
-      <p>Help the next generation find their path</p>
-    </div>
-    <div class="profile-banner">
-      <div class="avatar" style="background:linear-gradient(135deg,#f7934f,#f76f6f)">A</div>
-      <div class="profile-info">
-        <h2 id="alumniNameDisplay">Alumni User</h2>
-        <p>Senior Software Engineer · Class of 2021</p>
-        <span class="role-badge" style="background:rgba(247,147,79,0.15);color:var(--accent3);border-color:rgba(247,147,79,0.3);">🏆 Alumni</span>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2rem;margin-bottom:10px;">📣</div>
-        <div class="card-title">Share Experience</div>
-        <div class="card-sub">Post interview tips or career advice</div>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="showToast('Post feature coming soon!')">Write a Post</button>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2rem;margin-bottom:10px;">🎓</div>
-        <div class="card-title">Mentor Juniors</div>
-        <div class="card-sub">Accept 1:1 mentorship requests</div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="showToast('3 new mentorship requests!')">View Requests</button>
-      </div>
-    </div>
+<!-- ════ FAQ BOT ════ -->
+<button class="faq-fab" onclick="toggleFAQ()" id="faq-fab" title="AI Career Assistant">&#x1F4AC;</button>
+
+<div class="faq-panel" id="faq-panel">
+  <div class="faq-head">
+    <div class="faq-title"><div class="ai-dot"></div> PlaceIQ Assistant</div>
+    <button class="faq-close" onclick="toggleFAQ()">&#x2715;</button>
   </div>
+  <div class="faq-msgs" id="faq-msgs"></div>
+  <div class="faq-chips" id="faq-chips"></div>
+  <div class="faq-inp-row">
+    <input class="faq-inp" id="faq-inp" placeholder="Ask anything about placements..." onkeydown="if(event.key==='Enter')sendFAQ()">
+    <button class="faq-send" onclick="sendFAQ()">&#x27A4;</button>
+  </div>
+  <div class="faq-powered">Powered by Claude AI</div>
 </div>
 
-<!-- ═══════════════════ TOAST ═══════════════════ -->
-<div id="toast">✓ Applied Successfully!</div>
+<div class="toast" id="toast"></div>
 
 <script>
-  // ─── DATA ───
-  const jobs = [
-    { id:1, title:'Frontend Developer', company:'Swiggy', logo:'SW', color:'#f7934f', type:'full-time', skills:['React','JavaScript','CSS'], ctc:'12 LPA', loc:'Bengaluru' },
-    { id:2, title:'Data Analyst', company:'Razorpay', logo:'RZ', color:'#4f8ef7', type:'full-time', skills:['Python','SQL','Tableau'], ctc:'10 LPA', loc:'Bengaluru' },
-    { id:3, title:'Backend Engineer', company:'Zepto', logo:'ZP', color:'#38d9a9', type:'full-time', skills:['Node.js','MongoDB','Docker'], ctc:'14 LPA', loc:'Mumbai' },
-    { id:4, title:'ML Engineer Intern', company:'Flipkart', logo:'FK', color:'#a78bf7', type:'internship', skills:['Python','TensorFlow','NLP'], ctc:'₹60K/mo', loc:'Bengaluru' },
-    { id:5, title:'Cloud DevOps', company:'Accenture', logo:'AC', color:'#f76f6f', type:'full-time', skills:['AWS','Kubernetes','Linux'], ctc:'11 LPA', loc:'Pune' },
-    { id:6, title:'UI/UX Designer', company:'Urban Company', logo:'UC', color:'#38d9a9', type:'internship', skills:['Figma','CSS','Prototyping'], ctc:'₹40K/mo', loc:'Remote' },
-    { id:7, title:'Java Developer', company:'Infosys', logo:'IN', color:'#4f8ef7', type:'full-time', skills:['Java','Spring Boot','MySQL'], ctc:'8 LPA', loc:'Chennai' },
-    { id:8, title:'Product Manager', company:'Meesho', logo:'ME', color:'#f7934f', type:'contract', skills:['Agile','Analytics','Communication'], ctc:'18 LPA', loc:'Bengaluru' },
-  ];
+'use strict';
 
-  let currentSection = 'loginPage';
-  let prevSection = 'studentPage';
-  let currentRole = 'student';
-  let appliedJobs = new Set();
+// ══════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════
+const JOBS = [
+  {id:1,title:'Software Dev Engineer',company:'Amazon',ico:'&#x1F7E0;',loc:'Hyderabad',sal:18,minCgpa:7.0,skills:['Java','Data Structures','Algorithms','System Design','SQL']},
+  {id:2,title:'Data Scientist',company:'Flipkart',ico:'&#x1F6D2;',loc:'Bangalore',sal:16,minCgpa:7.5,skills:['Python','Machine Learning','SQL','Statistics','TensorFlow']},
+  {id:3,title:'Frontend Engineer',company:'Razorpay',ico:'&#x1F4B3;',loc:'Bangalore',sal:14,minCgpa:6.5,skills:['React','TypeScript','CSS','JavaScript','Node.js']},
+  {id:4,title:'ML Engineer',company:'Google',ico:'&#x1F7E1;',loc:'Hyderabad',sal:25,minCgpa:8.0,skills:['Python','TensorFlow','Machine Learning','Statistics','Kubernetes']},
+  {id:5,title:'Backend Engineer',company:'Swiggy',ico:'&#x1F355;',loc:'Bangalore',sal:12,minCgpa:6.0,skills:['Python','Django','PostgreSQL','Redis','Docker']},
+  {id:6,title:'Full Stack Developer',company:'Meesho',ico:'&#x1F6CD;',loc:'Bangalore',sal:11,minCgpa:6.5,skills:['React','Node.js','MongoDB','JavaScript','AWS']},
+  {id:7,title:'DevOps Engineer',company:'Zomato',ico:'&#x1F354;',loc:'Gurugram',sal:13,minCgpa:6.0,skills:['Docker','Kubernetes','AWS','CI/CD','Linux']},
+  {id:8,title:'AI Research Intern',company:'Microsoft',ico:'&#x1F535;',loc:'Hyderabad',sal:9,minCgpa:8.5,skills:['Python','PyTorch','Machine Learning','Research','Statistics']},
+  {id:9,title:'iOS Developer',company:'PhonePe',ico:'&#x1F4F1;',loc:'Bangalore',sal:15,minCgpa:7.0,skills:['Swift','iOS','Objective-C','Xcode','REST APIs']},
+  {id:10,title:'Data Analyst',company:'Ola',ico:'&#x1F697;',loc:'Bangalore',sal:8,minCgpa:6.5,skills:['SQL','Python','Excel','Tableau','Statistics']},
+  {id:11,title:'Cloud Engineer',company:'Infosys',ico:'&#x2601;&#xFE0F;',loc:'Pune',sal:7,minCgpa:6.0,skills:['AWS','Azure','Linux','Terraform','Python']},
+  {id:12,title:'Security Engineer',company:'Paytm',ico:'&#x1F512;',loc:'Noida',sal:14,minCgpa:7.0,skills:['Cybersecurity','Python','Networking','Linux','SIEM']},
+];
 
-  // ─── NAV ───
-  function show(id) {
-    prevSection = currentSection;
-    document.getElementById(currentSection).classList.remove('active');
-    document.getElementById(id).classList.add('active');
-    currentSection = id;
-    if (id === 'jobsPage') renderJobs();
-    window.scrollTo(0,0);
-  }
+const PLACEMENT = {
+  total:320,placed:231,avgSal:12.4,minSal:4.5,maxSal:28,companies:48,
+  depts:[
+    {name:'Computer Science',total:90,placed:78},
+    {name:'Information Technology',total:75,placed:61},
+    {name:'Electronics & Comm',total:68,placed:49},
+    {name:'Mechanical Engg',total:55,placed:28},
+    {name:'Civil Engineering',total:32,placed:15},
+  ],
+  apps:{pending:112,shortlisted:87,selected:231,rejected:94},
+  monthly:[4,7,11,18,24,32,45,52,38,29,14,6],
+  coSalary:{labels:['Google','Microsoft','Amazon','Razorpay','Flipkart','Swiggy','Infosys'],data:[24,20,18,14,15,12,7]},
+};
 
-  function goBack() { show(prevSection); }
+const TRENDS_DATA=[
+  {name:'Generative AI',pct:97,trend:'hot',growth:'+340%'},
+  {name:'Python',pct:93,trend:'hot',growth:'+28%'},
+  {name:'React / Next.js',pct:88,trend:'hot',growth:'+22%'},
+  {name:'Kubernetes',pct:81,trend:'rising',growth:'+45%'},
+  {name:'TypeScript',pct:79,trend:'rising',growth:'+38%'},
+  {name:'LLM / RAG',pct:76,trend:'hot',growth:'+210%'},
+  {name:'SQL',pct:74,trend:'stable',growth:'+5%'},
+  {name:'AWS / Cloud',pct:71,trend:'rising',growth:'+31%'},
+  {name:'Rust',pct:62,trend:'rising',growth:'+55%'},
+  {name:'Java',pct:58,trend:'stable',growth:'+3%'},
+];
 
-  function logout() {
-    document.getElementById(currentSection).classList.remove('active');
-    document.getElementById('loginPage').classList.add('active');
-    currentSection = 'loginPage';
-    document.getElementById('loginUser').value='';
-    document.getElementById('loginPass').value='';
-    document.getElementById('loginRole').value='';
-    document.getElementById('loginErr').style.display='none';
-    appliedJobs.clear();
-    window.scrollTo(0,0);
-  }
+const DEMAND_ROLES=[
+  {ico:'&#x1F916;',name:'AI / ML Engineer',demand:96,openings:'12,400+'},
+  {ico:'&#x1F5A5;&#xFE0F;',name:'Frontend Developer',demand:88,openings:'18,200+'},
+  {ico:'&#x2699;&#xFE0F;',name:'Backend Engineer',demand:85,openings:'15,800+'},
+  {ico:'&#x1F4CA;',name:'Data Scientist',demand:90,openings:'9,600+'},
+  {ico:'&#x2601;&#xFE0F;',name:'Cloud / DevOps',demand:82,openings:'11,000+'},
+  {ico:'&#x1F512;',name:'Security Engineer',demand:78,openings:'7,200+'},
+  {ico:'&#x1F4F1;',name:'Mobile Developer',demand:74,openings:'8,400+'},
+  {ico:'&#x1F5C4;&#xFE0F;',name:'Data Engineer',demand:83,openings:'10,500+'},
+];
 
-  // ─── LOGIN ───
-  function login() {
-    const u = document.getElementById('loginUser').value.trim();
-    const p = document.getElementById('loginPass').value.trim();
-    const r = document.getElementById('loginRole').value;
-    if (!u || !p || !r) {
-      document.getElementById('loginErr').style.display='block';
-      return;
-    }
-    document.getElementById('loginErr').style.display='none';
-    doLogin(u, r);
-  }
+const ALL_ROLES=['Software Engineer','Data Scientist','ML Engineer','Frontend Developer','Backend Engineer','DevOps Engineer','Product Manager','Full Stack Developer','Mobile Developer','Data Analyst'];
+const ALL_COMPANIES=['Google','Amazon','Microsoft','Flipkart','Razorpay','Swiggy','Zomato','Meesho','PhonePe','Ola','Infosys','TCS'];
 
-  function quickLogin(role) {
-    const names = {student:'student01', alumni:'alumni01', admin:'admin01'};
-    document.getElementById('loginUser').value = names[role];
-    document.getElementById('loginPass').value = 'demo123';
-    document.getElementById('loginRole').value = role;
-    doLogin(names[role], role);
-  }
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+function getState(){
+  const r=localStorage.getItem('placeiq_v3');
+  if(r) return JSON.parse(r);
+  return {
+    name:'Aarav Kumar',branch:'Computer Science',cgpa:8.7,expSal:10,
+    skills:['Python','React','SQL','Machine Learning'],
+    prefRoles:['ML Engineer','Data Scientist'],
+    prefCos:['Google','Flipkart'],
+    linkedin:'',github:'',
+  };
+}
+function saveState(s){localStorage.setItem('placeiq_v3',JSON.stringify(s))}
+let S=getState();
 
-  function doLogin(username, role) {
-    currentRole = role;
-    const display = username.charAt(0).toUpperCase() + username.slice(1).replace(/\d+/,'');
-    if (role === 'student') {
-      document.getElementById('studentNameDisplay').textContent = display || 'Student User';
-      document.getElementById('studentAvatar').textContent = (display[0]||'S');
-      document.getElementById('studentNavName').textContent = display;
-      prevSection = 'studentPage';
-      show('studentPage');
-    } else if (role === 'alumni') {
-      document.getElementById('alumniNameDisplay').textContent = display || 'Alumni User';
-      document.getElementById('alumniNavName').textContent = display;
-      prevSection = 'alumniDashPage';
-      show('alumniDashPage');
-    } else {
-      prevSection = 'adminPage';
-      show('adminPage');
-    }
-  }
+// ══════════════════════════════════════════
+//  SCORING ENGINE
+// ══════════════════════════════════════════
+function scoreJob(j){
+  const sl=S.skills.map(x=>x.toLowerCase());
+  const matched=j.skills.filter(s=>sl.includes(s.toLowerCase()));
+  const skillScore=j.skills.length?matched.length/j.skills.length*100:0;
+  const roleScore=S.prefRoles.some(r=>j.title.toLowerCase().includes(r.toLowerCase().split(' ')[0]))?100:0;
+  const coScore=S.prefCos.includes(j.company)?100:0;
+  const cgpa=parseFloat(S.cgpa);
+  const cgpaScore=cgpa>=j.minCgpa?100:Math.max(0,100-(j.minCgpa-cgpa)*40);
+  const total=Math.round(skillScore*.50+roleScore*.20+coScore*.15+cgpaScore*.15);
+  return{total,bd:{skill:Math.round(skillScore),role:Math.round(roleScore),co:Math.round(coScore),cgpa:Math.round(cgpaScore)},matched,eligible:cgpa>=j.minCgpa};
+}
 
-  // ─── SKILLS ───
-  function addSkill() {
-    const inp = document.getElementById('skillInput');
-    const val = inp.value.trim();
-    if (!val) return;
-    const tag = document.createElement('div');
-    tag.className = 'skill-tag';
-    tag.innerHTML = `${val} <span onclick="removeSkill(this)">✕</span>`;
-    document.getElementById('skillTags').appendChild(tag);
-    inp.value = '';
-    inp.focus();
-  }
+function scored(){return JOBS.map(j=>({...j,sc:scoreJob(j)})).sort((a,b)=>b.sc.total-a.sc.total)}
 
-  function removeSkill(el) { el.parentElement.remove(); }
+function mc(p){return p>=70?'h':p>=40?'m':'l'}
 
-  // ─── RESUME UPLOAD ───
-  function fakeUpload() { document.getElementById('resumeFile').click(); }
-  function handleFile() {
-    const f = document.getElementById('resumeFile').files[0];
-    if (f) {
-      document.getElementById('uploadText').textContent = '✅ ' + f.name + ' uploaded';
-      document.getElementById('uploadZone').style.borderColor = 'var(--accent2)';
-      document.getElementById('uploadZone').style.color = 'var(--accent2)';
-      showToast('Resume uploaded successfully!');
-    }
-  }
+// ══════════════════════════════════════════
+//  SIDEBAR
+// ══════════════════════════════════════════
+function renderSidebar(){
+  document.getElementById('av-letter').textContent=S.name.charAt(0);
+  document.getElementById('sb-name').textContent=S.name;
+  document.getElementById('sb-meta').textContent=S.branch+' \u00B7 CGPA '+S.cgpa;
+  document.getElementById('cgpa-val').textContent=S.cgpa;
+  document.getElementById('cgpa-bar').style.width=(S.cgpa/10*100)+'%';
 
-  // ─── JOBS ───
-  function renderJobs(filter='', typeFilter='') {
-    const list = document.getElementById('jobList');
-    const noRes = document.getElementById('noResults');
-    const q = filter.toLowerCase();
-    const filtered = jobs.filter(j => {
-      const matchQ = !q || j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) || j.skills.some(s=>s.toLowerCase().includes(q));
-      const matchT = !typeFilter || j.type === typeFilter;
-      return matchQ && matchT;
-    });
-    if (filtered.length === 0) {
-      list.innerHTML=''; noRes.style.display='block'; return;
-    }
-    noRes.style.display='none';
-    list.innerHTML = filtered.map(j => `
-      <div class="card job-card fade-in">
-        <div class="job-card-top">
-          <div class="company-logo" style="background:${j.color}20;color:${j.color};border:1px solid ${j.color}40;">${j.logo}</div>
-          <div class="job-meta">
-            <h3>${j.title}</h3>
-            <div class="co">🏢 ${j.company} · 📍 ${j.loc}</div>
-          </div>
-          <span class="job-type">${j.type}</span>
-        </div>
-        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:4px;">
-          ${j.skills.map(s=>`<span class="chip">${s}</span>`).join('')}
-        </div>
-        <div class="job-footer">
-          <span style="font-size:0.88rem;color:var(--accent2);font-weight:500;">💰 ${j.ctc}</span>
-          <button id="applyBtn${j.id}" class="btn btn-${appliedJobs.has(j.id)?'ghost':'primary'} btn-sm" onclick="applyJob(${j.id})">
-            ${appliedJobs.has(j.id)?'✓ Applied':'Apply Now'}
-          </button>
-        </div>
+  // Social buttons state
+  const libtn=document.getElementById('li-btn-sb');
+  const ghbtn=document.getElementById('gh-btn-sb');
+  if(S.linkedin){libtn.className='social-btn linked';libtn.innerHTML='<span class="social-icon">in</span> Linked';}
+  else{libtn.className='social-btn';libtn.innerHTML='<span class="social-icon">in</span> LinkedIn';}
+  if(S.github){ghbtn.className='social-btn linked';ghbtn.innerHTML='<span class="social-icon">&#x1F40D;</span> Connected';}
+  else{ghbtn.className='social-btn';ghbtn.innerHTML='<span class="social-icon">&#x1F40D;</span> GitHub';}
+
+  // Linked badges
+  const lb=document.getElementById('linked-badges');
+  let html='';
+  if(S.linkedin) html+=`<span class="linked-badge lb-li">in LinkedIn</span>`;
+  if(S.github) html+=`<span class="linked-badge lb-gh">&#x1F40D; ${S.github}</span>`;
+  lb.innerHTML=html;
+
+  // Skill chips
+  document.getElementById('skill-chips').innerHTML=S.skills.map(s=>`
+    <span class="chip on">${s}
+      <button onclick="removeSkill('${s}')">&#x00D7;</button>
+    </span>`).join('');
+
+  // Pref chips
+  document.getElementById('pref-chips').innerHTML=ALL_ROLES.map(r=>`
+    <span class="pref-chip ${S.prefRoles.includes(r)?'on':''}" onclick="toggleRole('${r}')">${r}</span>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  RECOMMENDATIONS
+// ══════════════════════════════════════════
+function renderRec(){
+  const sort=document.getElementById('rec-sort')?.value||'score';
+  let jobs=scored();
+  if(sort==='salary') jobs.sort((a,b)=>b.sal-a.sal);
+  else if(sort==='cgpa') jobs.sort((a,b)=>a.minCgpa-b.minCgpa);
+  const top=jobs.slice(0,6);
+  document.getElementById('rec-badge').textContent=jobs.filter(j=>j.sc.total>0).length+' jobs';
+
+  const list=document.getElementById('rec-list');
+  list.innerHTML=top.map((j,i)=>{
+    const c=mc(j.sc.total);
+    return`<div class="rec" style="animation-delay:${i*0.05}s">
+      <div class="rec-logo">${j.ico}</div>
+      <div>
+        <div class="rec-title">${j.title}</div>
+        <div class="rec-co">${j.company} &middot; ${j.loc}</div>
+        <div class="rec-tags">${j.skills.map(s=>`<span class="rtag ${j.sc.matched.map(x=>x.toLowerCase()).includes(s.toLowerCase())?'m':''}">${s}</span>`).join('')}</div>
+        <div class="salary-pill">&#8377;${j.sal} LPA</div>
+        ${!j.sc.eligible?`<span style="font-size:10px;color:var(--rose);margin-left:8px">CGPA ${j.minCgpa}+ required</span>`:''}
       </div>
-    `).join('');
+      <div class="mc">
+        <div class="mp ${c}">${j.sc.total}%</div>
+        <div class="ml">match</div>
+        <div class="mb"><div class="mf ${c}" style="width:${j.sc.total}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Formula breakdown
+  const t=top[0];
+  if(t){
+    const factors=[
+      {lbl:'Skill Match (50%)',val:t.sc.bd.skill,col:'var(--teal)'},
+      {lbl:'Role Pref (20%)',val:t.sc.bd.role,col:'var(--amber)'},
+      {lbl:'Company Pref (15%)',val:t.sc.bd.co,col:'var(--violet)'},
+      {lbl:'CGPA Fit (15%)',val:t.sc.bd.cgpa,col:'var(--sky)'},
+    ];
+    document.getElementById('formula-bd').innerHTML=factors.map(f=>`
+      <div class="sbrow">
+        <div class="sbf">${f.lbl}</div>
+        <div class="sbw"><div class="sbfill" style="width:${f.val}%;background:${f.col}"></div></div>
+        <div class="sbp">${f.val}%</div>
+      </div>`).join('')+`<div style="font-size:10px;color:var(--sand3);margin-top:5px;padding-top:7px;border-top:1px solid var(--line)">Showing: <strong style="color:var(--amber)">${t.title}</strong></div>`;
   }
 
-  function filterJobs() {
-    const q = document.getElementById('jobSearch').value;
-    const t = document.getElementById('jobFilter').value;
-    renderJobs(q, t);
-  }
+  // Pref company panel
+  document.getElementById('pref-co-panel').innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:5px">
+    ${ALL_COMPANIES.map(c=>`<span class="pref-chip ${S.prefCos.includes(c)?'on':''}" onclick="toggleCo('${c}')">${c}</span>`).join('')}
+  </div>`;
+}
 
-  function applyJob(id) {
-    if (appliedJobs.has(id)) return;
-    appliedJobs.add(id);
-    const btn = document.getElementById('applyBtn'+id);
-    if (btn) { btn.textContent = '✓ Applied'; btn.className = 'btn btn-ghost btn-sm'; }
-    showToast('Applied Successfully! 🎉');
-  }
+function renderAllJobs(){
+  const q=(document.getElementById('job-search')?.value||'').toLowerCase();
+  const loc=document.getElementById('job-loc')?.value||'';
+  const jobs=scored().filter(j=>(!q||j.title.toLowerCase().includes(q)||j.company.toLowerCase().includes(q))&&(!loc||j.loc===loc));
+  const el=document.getElementById('all-jobs');
+  if(!jobs.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--sand3)">No jobs found</div>';return;}
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:11px">
+    <thead><tr style="background:var(--ink3)">
+      ${['Job','Skills','Salary','CGPA','Match'].map(h=>`<th style="padding:9px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--sand3);border-bottom:1px solid var(--line)">${h}</th>`).join('')}
+    </tr></thead>
+    <tbody>${jobs.map(j=>{
+      const c=mc(j.sc.total);
+      const cc=c==='h'?'var(--teal)':c==='m'?'var(--amber)':'var(--rose)';
+      return`<tr style="border-bottom:1px solid var(--line)" onmouseover="this.style.background='var(--ink3)'" onmouseout="this.style.background=''">
+        <td style="padding:10px 10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">${j.ico}</span>
+            <div><div style="font-weight:600;color:var(--sand)">${j.title}</div><div style="color:var(--sand3)">${j.company} &middot; ${j.loc}</div></div>
+          </div>
+        </td>
+        <td style="padding:10px 10px"><div style="display:flex;flex-wrap:wrap;gap:2px">${j.skills.map(s=>`<span style="background:${j.sc.matched.map(x=>x.toLowerCase()).includes(s.toLowerCase())?'rgba(45,212,191,.12)':'var(--ink4)'};color:${j.sc.matched.map(x=>x.toLowerCase()).includes(s.toLowerCase())?'var(--teal)':'var(--sand3)'};border-radius:4px;padding:2px 6px">${s}</span>`).join('')}</div></td>
+        <td style="padding:10px 10px;color:var(--teal);font-family:var(--fm);font-weight:600">&#8377;${j.sal}L</td>
+        <td style="padding:10px 10px;color:var(--sand3);font-family:var(--fm)">${j.minCgpa}+</td>
+        <td style="padding:10px 10px"><span style="font-size:14px;font-weight:800;font-family:var(--fm);color:${cc}">${j.sc.total}%</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
 
-  // ─── TOAST ───
-  let toastTimer;
-  function showToast(msg='Applied Successfully!') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
-  }
+// ══════════════════════════════════════════
+//  ANALYTICS
+// ══════════════════════════════════════════
+let C={};
+function renderAnalytics(){
+  const d=PLACEMENT;
+  const pct=Math.round(d.placed/d.total*100);
+  document.getElementById('ana-stats').innerHTML=[
+    {cls:'a',lbl:'Total Students',val:d.total,sub:'Registered this year'},
+    {cls:'t',lbl:'Students Placed',val:d.placed,sub:`${pct}% placement rate`,delta:true},
+    {cls:'r',lbl:'Avg Package',val:`&#8377;${d.avgSal}L`,sub:'+18% vs last year',delta:true},
+    {cls:'v',lbl:'Companies Visited',val:d.companies,sub:`Across ${d.depts.length} depts`},
+  ].map(s=>`<div class="stat ${s.cls}"><div class="sl">${s.lbl}</div><div class="sv">${s.val}</div><div class="sd ${s.delta?'su':''}">${s.sub}</div></div>`).join('');
 
-  // ─── INIT ───
-  renderJobs();
+  document.getElementById('ring-pct').textContent=pct+'%';
+  document.getElementById('ring-leg').innerHTML=[
+    {lbl:'Placed',val:d.placed,col:'#2dd4bf'},
+    {lbl:'Unplaced',val:d.total-d.placed,col:'#fb7185'},
+    {lbl:'Total',val:d.total,col:'#f5a623'},
+  ].map(r=>`<div class="rleg-row"><div class="rdot" style="background:${r.col}"></div><div class="rleg-l">${r.lbl}</div><div class="rleg-v" style="color:${r.col};margin-left:16px">${r.val}</div></div>`).join('');
+
+  document.getElementById('dept-tbl').innerHTML=`
+    <div class="dr hdr"><div>Department</div><div>Total</div><div>Placed</div><div>Rate</div><div>%</div></div>
+    ${d.depts.map(dep=>{const p=Math.round(dep.placed/dep.total*100);return`
+    <div class="dr">
+      <div class="dn">${dep.name}</div><div class="dnum">${dep.total}</div><div class="dpl">${dep.placed}</div>
+      <div><div class="dbw"><div class="dbf" style="width:${p}%"></div></div></div>
+      <div class="dpct">${p}%</div>
+    </div>`;}).join('')}`;
+
+  document.getElementById('sal-stats').innerHTML=[
+    {cls:'min',val:`&#8377;${d.minSal}L`,lbl:'Min CTC'},
+    {cls:'avg',val:`&#8377;${d.avgSal}L`,lbl:'Avg CTC'},
+    {cls:'max',val:`&#8377;${d.maxSal}L`,lbl:'Max CTC'},
+  ].map(s=>`<div class="sstat"><div class="ssv ${s.cls}">${s.val}</div><div class="ssl">${s.lbl}</div></div>`).join('');
+
+  setTimeout(()=>{
+    const df={color:'#a49b92',grid:'rgba(42,43,58,.9)',font:{family:'Outfit,sans-serif',size:10}};
+    const dk=(id,cfg)=>{if(C[id])C[id].destroy();const c=document.getElementById(id);if(c)C[id]=new Chart(c,cfg)};
+
+    dk('ch-ring',{type:'doughnut',data:{datasets:[{data:[d.placed,d.total-d.placed],backgroundColor:['#2dd4bf','#fb7185'],borderColor:'#11121a',borderWidth:3,hoverOffset:5}]},options:{cutout:'72%',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    dk('ch-sal',{type:'line',data:{labels:months,datasets:[{label:'Offers',data:d.monthly,borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.08)',fill:true,tension:.45,pointRadius:3,pointBackgroundColor:'#f5a623'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:df.color,font:df.font},grid:{color:df.grid}},y:{ticks:{color:df.color,font:df.font},grid:{color:df.grid}}}}});
+
+    dk('ch-co-sal',{type:'bar',data:{labels:d.coSalary.labels,datasets:[{label:'Avg LPA',data:d.coSalary.data,backgroundColor:['rgba(45,212,191,.7)','rgba(167,139,250,.7)','rgba(245,166,35,.7)','rgba(56,189,248,.7)','rgba(251,113,133,.7)','rgba(45,212,191,.5)','rgba(245,166,35,.4)'],borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:df.color,font:df.font},grid:{display:false}},y:{ticks:{color:df.color,font:df.font},grid:{color:df.grid},beginAtZero:true}}}});
+
+    const ap=d.apps;
+    dk('ch-app',{type:'doughnut',data:{labels:['Pending','Shortlisted','Selected','Rejected'],datasets:[{data:[ap.pending,ap.shortlisted,ap.selected,ap.rejected],backgroundColor:['rgba(245,166,35,.8)','rgba(167,139,250,.8)','rgba(45,212,191,.8)','rgba(251,113,133,.8)'],borderColor:'#11121a',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'right',labels:{color:df.color,font:df.font,boxWidth:9,padding:10}}}}});
+
+    dk('ch-mth',{type:'bar',data:{labels:months,datasets:[{label:'Placements',data:[2,4,8,14,20,28,38,42,30,22,12,5],backgroundColor:'rgba(167,139,250,.6)',borderRadius:4,borderSkipped:false},{label:'Applications',data:[8,15,28,45,62,78,92,88,65,45,28,14],type:'line',borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.04)',fill:true,tension:.4,pointRadius:2,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:df.color,font:df.font,boxWidth:9}}},scales:{x:{ticks:{color:df.color,font:df.font},grid:{display:false}},y:{ticks:{color:df.color,font:df.font},grid:{color:df.grid}},y2:{position:'right',ticks:{color:'#f5a623',font:df.font},grid:{display:false}}}}});
+  },80);
+}
+
+// ══════════════════════════════════════════
+//  TRENDS
+// ══════════════════════════════════════════
+function renderTrends(){
+  const tCols=['#fb7185','#fb7185','#f5a623','#2dd4bf','#f5a623','#fb7185','#2dd4bf','#f5a623','#f5a623','#2dd4bf'];
+  document.getElementById('trend-skills').innerHTML=TRENDS_DATA.map((s,i)=>`
+    <div class="trow">
+      <div class="trank">${String(i+1).padStart(2,'0')}</div>
+      <div class="tlbl">${s.name}</div>
+      <div class="tbw"><div class="tb" style="width:${s.pct}%;background:${tCols[i]}"></div></div>
+      <div class="tpct">${s.pct}%</div>
+      <div class="tbadge ${s.trend}">${s.trend}</div>
+    </div>`).join('');
+
+  document.getElementById('demand-roles').innerHTML=DEMAND_ROLES.map(r=>`
+    <div class="rtile">
+      <div class="remi">${r.ico}</div>
+      <div class="rname">${r.name}</div>
+      <div class="rdem">${r.openings} openings</div>
+      <div class="dmtr"><div class="dmf" style="width:${r.demand}%"></div></div>
+    </div>`).join('');
+
+  setTimeout(()=>{
+    const df={color:'#a49b92',grid:'rgba(42,43,58,.9)',font:{family:'Outfit,sans-serif',size:10}};
+    const dk=(id,cfg)=>{if(C[id])C[id].destroy();const c=document.getElementById(id);if(c)C[id]=new Chart(c,cfg)};
+
+    dk('ch-radar',{type:'radar',data:{labels:['Python','React','ML/AI','SQL','Java','Cloud','DevOps','Security'],datasets:[
+      {label:'Market Demand',data:[93,88,97,74,58,71,79,65],backgroundColor:'rgba(245,166,35,.12)',borderColor:'#f5a623',pointBackgroundColor:'#f5a623',pointRadius:4},
+      {label:'Your Skills',data:[
+        S.skills.some(s=>s.toLowerCase()==='python')?90:10,
+        S.skills.some(s=>s.toLowerCase()==='react')?85:10,
+        S.skills.some(s=>['machine learning','tensorflow','pytorch'].includes(s.toLowerCase()))?75:10,
+        S.skills.some(s=>s.toLowerCase()==='sql')?80:10,
+        S.skills.some(s=>s.toLowerCase()==='java')?70:10,
+        S.skills.some(s=>['aws','azure','gcp','cloud'].includes(s.toLowerCase()))?65:10,
+        S.skills.some(s=>['docker','kubernetes','devops','ci/cd'].includes(s.toLowerCase()))?60:10,
+        S.skills.some(s=>['security','cybersecurity'].includes(s.toLowerCase()))?55:10,
+      ],backgroundColor:'rgba(45,212,191,.12)',borderColor:'#2dd4bf',pointBackgroundColor:'#2dd4bf',pointRadius:4}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:df.color,font:df.font,boxWidth:9}}},scales:{r:{ticks:{color:df.color,backdropColor:'transparent',font:df.font},grid:{color:df.grid},pointLabels:{color:'#e6ddd4',font:{...df.font,size:11}},suggestedMin:0,suggestedMax:100}}}});
+
+    dk('ch-role-sal',{type:'bar',data:{labels:['ML Eng','Cloud Eng','Data Sci','SDE','Frontend','Backend','DevOps','Mobile'],datasets:[
+      {label:'Min LPA',data:[8,7,7,6,5,6,7,6],backgroundColor:'rgba(251,113,133,.6)',borderRadius:4},
+      {label:'Avg LPA',data:[18,14,15,14,12,12,13,13],backgroundColor:'rgba(245,166,35,.7)',borderRadius:4},
+      {label:'Max LPA',data:[35,28,30,32,25,28,25,22],backgroundColor:'rgba(45,212,191,.7)',borderRadius:4},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:df.color,font:df.font,boxWidth:9}}},scales:{x:{ticks:{color:df.color,font:df.font},grid:{display:false}},y:{ticks:{color:df.color,font:df.font},grid:{color:df.grid}}}}});
+  },80);
+}
+
+// ══════════════════════════════════════════
+//  PREFERENCES PAGE
+// ══════════════════════════════════════════
+function renderPrefsPage(){
+  document.getElementById('p-name').value=S.name;
+  document.getElementById('p-branch').value=S.branch;
+  document.getElementById('p-cgpa').value=S.cgpa;
+  document.getElementById('p-sal').value=S.expSal;
+  document.getElementById('pref-roles-panel').innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px">${ALL_ROLES.map(r=>`<span class="pref-chip ${S.prefRoles.includes(r)?'on':''}" onclick="toggleRole('${r}');renderPrefsPage()">${r}</span>`).join('')}</div>`;
+  document.getElementById('pref-cos-panel').innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px">${ALL_COMPANIES.map(c=>`<span class="pref-chip ${S.prefCos.includes(c)?'on':''}" onclick="toggleCo('${c}');renderPrefsPage()">${c}</span>`).join('')}</div>`;
+}
+
+// ══════════════════════════════════════════
+//  SOCIAL PROFILES PAGE
+// ══════════════════════════════════════════
+function renderSocialPage(){
+  const liInput=document.getElementById('li-url');
+  const ghInput=document.getElementById('gh-user');
+  if(liInput&&S.linkedin){liInput.value=S.linkedin;showLinkedInPreview();}
+  if(ghInput&&S.github){ghInput.value=S.github;showGitHubPreview();}
+  updateSocialBadges();
+}
+
+function updateSocialBadges(){
+  const libs=document.getElementById('li-status-badge');
+  const ghbs=document.getElementById('gh-status-badge');
+  if(libs) libs.innerHTML=S.linkedin?`<span style="font-size:10px;color:var(--teal);background:var(--teal-d);border:1px solid rgba(45,212,191,.3);border-radius:20px;padding:2px 8px">Connected</span>`:`<span style="font-size:10px;color:var(--sand3)">Not linked</span>`;
+  if(ghbs) ghbs.innerHTML=S.github?`<span style="font-size:10px;color:var(--teal);background:var(--teal-d);border:1px solid rgba(45,212,191,.3);border-radius:20px;padding:2px 8px">Connected</span>`:`<span style="font-size:10px;color:var(--sand3)">Not linked</span>`;
+}
+
+function showLinkedInPreview(){
+  const url=document.getElementById('li-url').value.trim();
+  const p=document.getElementById('li-preview');
+  if(!url){p.classList.remove('show');return;}
+  const name=url.split('/in/').pop()?.replace(/\//g,'')||'Unknown';
+  p.className='preview-card show';
+  p.innerHTML=`<div class="preview-row">
+    <div class="preview-av">&#x1F464;</div>
+    <div><div class="preview-name">${name.charAt(0).toUpperCase()+name.slice(1)}</div><div class="preview-sub">LinkedIn Profile</div></div>
+  </div>
+  <div class="preview-stats">
+    <div class="pstat"><div class="pstat-v">1st</div><div class="pstat-l">Degree</div></div>
+    <div class="pstat"><div class="pstat-v">Open</div><div class="pstat-l">To Work</div></div>
+  </div>`;
+}
+
+function connectLinkedIn(){
+  const url=document.getElementById('li-url').value.trim();
+  if(!url){toast('Please enter a LinkedIn URL','err');return;}
+  if(!url.includes('linkedin.com')){toast('Please enter a valid LinkedIn URL','err');return;}
+  S.linkedin=url;saveState(S);
+  showLinkedInPreview();
+  updateSocialBadges();
+  renderSidebar();
+  toast('LinkedIn connected successfully!','ok');
+}
+
+function showGitHubPreview(){
+  const user=document.getElementById('gh-user').value.trim();
+  const p=document.getElementById('gh-preview');
+  if(!user){p.classList.remove('show');return;}
+  p.className='preview-card show';
+  p.innerHTML=`<div class="preview-row">
+    <div class="preview-av">&#x1F40D;</div>
+    <div><div class="preview-name">${user}</div><div class="preview-sub">GitHub Account</div></div>
+  </div>
+  <div class="preview-stats">
+    <div class="pstat"><div class="pstat-v">Public</div><div class="pstat-l">Profile</div></div>
+    <div class="pstat"><div class="pstat-v">Active</div><div class="pstat-l">Status</div></div>
+  </div>`;
+}
+
+function connectGitHub(){
+  const user=document.getElementById('gh-user').value.trim();
+  if(!user){toast('Please enter a GitHub username','err');return;}
+  S.github=user;saveState(S);
+  showGitHubPreview();
+  updateSocialBadges();
+  renderSidebar();
+  // Auto-add inferred skills
+  const inferredSkills=['Git','Open Source'];
+  let added=0;
+  inferredSkills.forEach(sk=>{
+    if(!S.skills.map(s=>s.toLowerCase()).includes(sk.toLowerCase())){S.skills.push(sk);added++;}
+  });
+  if(added>0){renderSidebar();renderRec();}
+  toast(`GitHub connected! ${added>0?`+${added} skills detected.`:''}`.trim(),'ok');
+}
+
+// ══════════════════════════════════════════
+//  MODAL (quick connect from sidebar)
+// ══════════════════════════════════════════
+let currentModal='';
+function openModal(type){
+  currentModal=type;
+  const ov=document.getElementById('modal-overlay');
+  const title=document.getElementById('modal-title');
+  const body=document.getElementById('modal-body');
+  if(type==='linkedin'){
+    title.textContent='Connect LinkedIn';
+    body.innerHTML=`
+      <div class="modal-logo li">in</div>
+      <div class="modal-desc">Enter your LinkedIn profile URL to boost your visibility with recruiters.</div>
+      <div class="modal-field"><div class="fl">Profile URL</div><input class="fi" id="m-li-url" value="${S.linkedin||''}" placeholder="https://linkedin.com/in/yourname" oninput="mLiPreview()"></div>
+      <div id="m-li-prev" class="preview-card"></div>
+      <div style="height:10px"></div>
+      <button class="btn-connect li-btn" onclick="mConnectLI()">Connect LinkedIn</button>`;
+    if(S.linkedin) setTimeout(mLiPreview,50);
+  } else {
+    title.textContent='Connect GitHub';
+    body.innerHTML=`
+      <div class="modal-logo gh">&#x1F40D;</div>
+      <div class="modal-desc">Enter your GitHub username to auto-detect skills from your repositories.</div>
+      <div class="modal-field"><div class="fl">GitHub Username</div><input class="fi" id="m-gh-user" value="${S.github||''}" placeholder="your-github-username" oninput="mGhPreview()"></div>
+      <div id="m-gh-prev" class="preview-card"></div>
+      <div style="height:10px"></div>
+      <button class="btn-connect gh-btn" onclick="mConnectGH()">Connect GitHub</button>`;
+    if(S.github) setTimeout(mGhPreview,50);
+  }
+  ov.classList.add('on');
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('on')}
+
+function mLiPreview(){
+  const v=document.getElementById('m-li-url')?.value.trim();
+  const p=document.getElementById('m-li-prev');
+  if(!v||!p){return;}
+  const name=v.split('/in/').pop()?.replace(/\//g,'')||'profile';
+  p.className='preview-card show';
+  p.innerHTML=`<div class="preview-row"><div class="preview-av">&#x1F464;</div><div><div class="preview-name">${name}</div><div class="preview-sub">LinkedIn</div></div></div>`;
+}
+
+function mGhPreview(){
+  const v=document.getElementById('m-gh-user')?.value.trim();
+  const p=document.getElementById('m-gh-prev');
+  if(!v||!p) return;
+  p.className='preview-card show';
+  p.innerHTML=`<div class="preview-row"><div class="preview-av">&#x1F40D;</div><div><div class="preview-name">${v}</div><div class="preview-sub">GitHub</div></div></div>`;
+}
+
+function mConnectLI(){
+  const url=document.getElementById('m-li-url')?.value.trim();
+  if(!url||!url.includes('linkedin.com')){toast('Enter a valid LinkedIn URL','err');return;}
+  S.linkedin=url;saveState(S);renderSidebar();closeModal();toast('LinkedIn connected!','ok');
+}
+
+function mConnectGH(){
+  const user=document.getElementById('m-gh-user')?.value.trim();
+  if(!user){toast('Enter a GitHub username','err');return;}
+  S.github=user;saveState(S);renderSidebar();closeModal();toast('GitHub connected!','ok');
+}
+
+// ══════════════════════════════════════════
+//  FAQ / AI CHATBOT
+// ══════════════════════════════════════════
+let faqOpen=false;
+let faqHistory=[];
+
+const FAQ_KB = {
+  'placement rate':  'Our overall placement rate is 72% (231 out of 320 students). CSE leads at 87%, followed by IT at 81%.',
+  'highest package': 'The highest package this year is Rs. 28 LPA, offered by top tech companies including Google and Amazon.',
+  'average salary':  'The average CTC is Rs. 12.4 LPA. Median is around Rs. 9.8 LPA. Top-tier companies offer Rs. 20+ LPA.',
+  'top companies':   'Top hiring companies this year: Google, Amazon, Microsoft, Razorpay, Flipkart, Swiggy, and Zomato.',
+  'skills':          'Top skills in demand: Python, React/Next.js, Machine Learning, SQL, Docker/Kubernetes, and TypeScript.',
+  'cgpa':            'A CGPA of 6.5+ qualifies for most companies. Premium companies like Google require 8.0+.',
+  'how to improve':  'To improve your match score: add more relevant skills, update your preferred roles, and link your GitHub profile.',
+  'linkedin':        'Link your LinkedIn in the "Social Profiles" tab or click the LinkedIn button in the sidebar.',
+  'github':          'Go to "Social Profiles" tab and enter your GitHub username. We will auto-detect your skills!',
+  'internship':      'We support internship listings too. Filter by role type in the recommendations page.',
+  'data science':    'Data Science roles have 90% demand index. Required skills: Python, SQL, ML, Statistics, TensorFlow.',
+  'software engineer': 'SDE roles need: Data Structures, Algorithms, Java/Python, System Design. Avg package Rs. 14 LPA.',
+};
+
+const QUICK_FAQS=['What is the placement rate?','Top hiring companies?','How to improve my match?','Link LinkedIn / GitHub?','Average salary package?'];
+
+function toggleFAQ(){
+  faqOpen=!faqOpen;
+  document.getElementById('faq-panel').classList.toggle('on',faqOpen);
+  document.getElementById('faq-fab').textContent=faqOpen?'✕':'💬';
+  if(faqOpen&&faqHistory.length===0) botMsg('Hi! I am your PlaceIQ career assistant. Ask me anything about placements, jobs, or how to improve your profile.');
+}
+
+function botMsg(text){
+  faqHistory.push({role:'bot',text});
+  renderMsgs();
+}
+
+function renderMsgs(){
+  const el=document.getElementById('faq-msgs');
+  el.innerHTML=faqHistory.map(m=>`<div class="msg ${m.role}">${m.text}</div>`).join('');
+  el.scrollTop=el.scrollHeight;
+  // Render quick chips after first bot message
+  const chips=document.getElementById('faq-chips');
+  chips.innerHTML=faqHistory.length<=2?QUICK_FAQS.map(q=>`<span class="faq-chip" onclick="askFAQ('${q}')">${q}</span>`).join(''):'';
+}
+
+function askFAQ(q){
+  faqHistory.push({role:'usr',text:q});
+  renderMsgs();
+  setTimeout(()=>answerFAQ(q),400);
+}
+
+function sendFAQ(){
+  const inp=document.getElementById('faq-inp');
+  const q=inp.value.trim();
+  if(!q) return;
+  inp.value='';
+  askFAQ(q);
+}
+
+function answerFAQ(q){
+  const ql=q.toLowerCase();
+  // Local KB match
+  for(const[key,ans] of Object.entries(FAQ_KB)){
+    if(ql.includes(key)){botMsg(ans);return;}
+  }
+  // Contextual answers
+  if(ql.includes('skill') && ql.includes('add')) {botMsg('You can add skills using the sidebar input or the skill chips. Each new skill immediately updates your job match scores.');return;}
+  if(ql.includes('match') || ql.includes('score')) {botMsg('Your match score = Skill Match (50%) + Role Preference (20%) + Company Preference (15%) + CGPA Fit (15%). Higher scores = better matches!');return;}
+  if(ql.includes('resume') || ql.includes('cv')) {botMsg('A strong resume for tech roles should highlight: projects, internships, skills used, and GitHub contributions. Linking your GitHub here auto-populates skills.');return;}
+  if(ql.includes('prepare') || ql.includes('interview')) {botMsg('For placements, prepare: DSA (LeetCode), System Design, your chosen tech stack, and behavioural questions (STAR method).');return;}
+  // Fallback: call Claude API
+  callClaudeForFAQ(q);
+}
+
+async function callClaudeForFAQ(q){
+  // Show typing
+  faqHistory.push({role:'bot',text:'Thinking...',typing:true});
+  renderMsgs();
+  try{
+    const context=`You are a helpful placement advisor for PlaceIQ, a college placement platform. 
+    Student: ${S.name}, Branch: ${S.branch}, CGPA: ${S.cgpa}, Skills: ${S.skills.join(', ')}.
+    Placement stats: 72% rate, avg salary Rs.12.4 LPA, top companies: Google, Amazon, Microsoft.
+    Answer concisely in 2-3 sentences. Be helpful and encouraging.`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:context,
+        messages:[...faqHistory.filter(m=>!m.typing&&m.role==='usr').slice(-4).map(m=>({role:'user',content:m.text})),{role:'user',content:q}]
+      })
+    });
+    const d=await res.json();
+    const text=d.content?.map(c=>c.text||'').join('')||'Sorry, I could not get an answer right now.';
+    faqHistory=faqHistory.filter(m=>!m.typing);
+    botMsg(text);
+  } catch{
+    faqHistory=faqHistory.filter(m=>!m.typing);
+    botMsg('I could not reach the AI right now, but feel free to ask anything and I will do my best with the local knowledge base!');
+  }
+}
+
+// ══════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════
+function addSkill(){
+  const inp=document.getElementById('skill-inp');
+  const v=inp.value.trim();
+  if(!v) return;
+  if(S.skills.map(s=>s.toLowerCase()).includes(v.toLowerCase())){toast('Skill already added','err');inp.value='';return;}
+  S.skills.push(v);saveState(S);inp.value='';
+  renderSidebar();renderRec();
+  toast(v+' added!','ok');
+}
+
+function removeSkill(sk){
+  S.skills=S.skills.filter(s=>s!==sk);saveState(S);
+  renderSidebar();renderRec();toast('Removed '+sk,'ok');
+}
+
+function toggleRole(r){
+  S.prefRoles=S.prefRoles.includes(r)?S.prefRoles.filter(x=>x!==r):[...S.prefRoles,r];
+  saveState(S);renderSidebar();renderRec();
+}
+
+function toggleCo(c){
+  S.prefCos=S.prefCos.includes(c)?S.prefCos.filter(x=>x!==c):[...S.prefCos,c];
+  saveState(S);renderRec();
+}
+
+function saveProfile(){
+  S.name=document.getElementById('p-name').value.trim()||S.name;
+  S.branch=document.getElementById('p-branch').value;
+  S.cgpa=parseFloat(document.getElementById('p-cgpa').value)||S.cgpa;
+  S.expSal=parseFloat(document.getElementById('p-sal').value)||S.expSal;
+  saveState(S);renderSidebar();renderRec();toast('Profile saved!','ok');
+}
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+function goto(pg){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-i').forEach(n=>n.classList.remove('on'));
+  document.getElementById('page-'+pg)?.classList.add('on');
+  document.getElementById('nav-'+pg)?.classList.add('on');
+  if(pg==='ana') renderAnalytics();
+  else if(pg==='trd') renderTrends();
+  else if(pg==='prf') renderPrefsPage();
+  else if(pg==='soc') renderSocialPage();
+  else{renderRec();renderAllJobs();}
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  renderSidebar();renderRec();renderAllJobs();
+});
 </script>
 </body>
 </html>
